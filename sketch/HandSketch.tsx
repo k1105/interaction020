@@ -9,6 +9,7 @@ import { convertHandToHandpose } from "../lib/converter/convertHandToHandpose";
 import { isFront } from "../lib/calculator/isFront";
 import { Monitor } from "../components/Monitor";
 import { Recorder } from "../components/Recorder";
+import Matter from "matter-js";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -36,6 +37,29 @@ export const HandSketch = ({ handpose }: Props) => {
 
   const debugLog = useRef<{ label: string; value: any }[]>([]);
 
+  const circleSize = 80;
+
+  // module aliases
+  let Engine = Matter.Engine,
+    Bodies = Matter.Bodies,
+    Composite = Matter.Composite;
+  const floors: Matter.Body[] = [];
+  for (let i = 0; i < 11; i++) {
+    floors.push(
+      Bodies.rectangle(
+        (window.innerWidth / 11) * i + window.innerWidth / 11 / 2,
+        (window.innerHeight / 3) * 2,
+        1,
+        10,
+        { isStatic: true }
+      )
+    );
+  }
+  const circle = Bodies.circle(window.innerWidth / 2, -1000, circleSize);
+
+  // create an engine
+  let engine: Matter.Engine;
+
   const preload = (p5: p5Types) => {
     // 画像などのロードを行う
   };
@@ -45,6 +69,8 @@ export const HandSketch = ({ handpose }: Props) => {
     p5.stroke(220);
     p5.fill(255);
     p5.strokeWeight(10);
+    engine = Engine.create();
+    Composite.add(engine.world, [circle, ...floors]);
   };
 
   const draw = (p5: p5Types) => {
@@ -115,24 +141,68 @@ export const HandSketch = ({ handpose }: Props) => {
 
     p5.push();
     p5.noFill();
-    p5.beginShape();
     p5.stroke(200);
+    p5.rectMode(p5.CENTER);
     for (let i = 0; i < 12; i++) {
-      p5.vertex(
-        (i * p5.width) / 11 + distList[i].x,
-        (p5.height / 3) * 2 + distList[i].y
-      );
       if (i < 11) {
-        p5.circle(
+        const currentWidth = floors[i].bounds.max.x - floors[i].bounds.min.x;
+        const targetWidth = 100;
+        Matter.Body.scale(floors[i], targetWidth / currentWidth, 1);
+        const dist = p5.dist(
+          distList[i + 1].x + p5.width / 11,
+          distList[i + 1].y,
+          distList[i].x,
+          distList[i].y
+        );
+        const angle = Math.atan2(
+          distList[i + 1].y - distList[i].y,
+          distList[i + 1].x + p5.width / 11 - distList[i].x
+        );
+        Matter.Body.setPosition(
+          floors[i],
+          {
+            x:
+              (distList[i].x + distList[i + 1].x + p5.width / 11) / 2 +
+              (i * p5.width) / 11,
+            y: (distList[i].y + distList[i + 1].y) / 2 + (p5.height / 3) * 2,
+          }, //@ts-ignore
+          true
+        );
+        Matter.Body.setAngle(
+          floors[i],
+          angle, //@ts-ignore
+          true
+        );
+        p5.push();
+        p5.noFill();
+        p5.strokeWeight(1);
+        p5.translate(
           (distList[i].x + distList[i + 1].x + p5.width / 11) / 2 +
             (i * p5.width) / 11,
-          (distList[i].y + distList[i + 1].y) / 2 + (p5.height / 3) * 2,
-          10
+          (distList[i].y + distList[i + 1].y) / 2 + (p5.height / 3) * 2
         );
+        p5.rotate(angle);
+        p5.rect(0, 0, dist, 10);
+        p5.pop();
+        // p5.push();
+        // p5.noFill();
+        // p5.strokeWeight(1);
+        // p5.translate(floors[i].position.x, floors[i].position.y);
+        // p5.rotate(floors[i].angle);
+        // const [w, h] = [
+        //   floors[i].bounds.max.x - floors[i].bounds.min.x,
+        //   floors[i].bounds.max.y - floors[i].bounds.min.y,
+        // ];
+        // p5.rect(0, 0, w, h);
+        // p5.pop();
       }
     }
-    p5.endShape();
     p5.pop();
+
+    Engine.update(engine);
+    p5.circle(circle.position.x, circle.position.y, circleSize * 2);
+
+    p5.rectMode(p5.CENTER);
   };
 
   const windowResized = (p5: p5Types) => {
