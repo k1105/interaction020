@@ -15,11 +15,6 @@ type Props = {
   handpose: MutableRefObject<Hand[]>;
 };
 
-let leftHand: Keypoint[] = [];
-let rightHand: Keypoint[] = [];
-let leftHandOpacity: number = 0;
-let rightHandOpacity: number = 0;
-
 const distList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
 
 type Handpose = Keypoint[];
@@ -198,6 +193,10 @@ export const HandSketch = ({ handpose }: Props) => {
       }
     }
     p5.pop();
+
+    if (circle.position.y > 3000) {
+      Matter.Body.setPosition(circle, { x: window.innerWidth / 2, y: -1000 });
+    }
 
     Engine.update(engine);
     p5.circle(circle.position.x, circle.position.y, circleSize * 2);
