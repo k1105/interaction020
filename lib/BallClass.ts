@@ -9,6 +9,7 @@ export class Ball {
   private scale: number;
   private currentScale: number;
   private targetScale: number;
+  private multiply: number;
   constructor(position: Keypoint, size: number) {
     this.body = Matter.Bodies.circle(position.x, position.y, size);
     this.displaySize = size * 2;
@@ -16,6 +17,15 @@ export class Ball {
     this.currentScale = 1;
     this.targetScale = 1;
     this.t = 1;
+    this.multiply = 1;
+  }
+
+  getMultiply() {
+    return this.multiply;
+  }
+
+  setMultiply(multiply: number) {
+    this.multiply = multiply;
   }
 
   show(p5: p5Types) {

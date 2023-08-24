@@ -214,19 +214,20 @@ export const HandSketch = ({ handpose }: Props) => {
       if (event.getState() == "fired") {
         if (event.type == "x2") {
           Matter.Body.scale(circle, 2, 2);
+          ball.setMultiply(2);
           ball.updateScale(2);
         } else if (event.type == "x0.5") {
           Matter.Body.scale(circle, 0.5, 0.5);
+          ball.setMultiply(0.5);
           ball.updateScale(0.5);
         }
         event.setNone();
       } else if (event.getState() == "expired") {
-        if (event.type == "x2") {
-          Matter.Body.scale(circle, 0.5, 0.5);
-          ball.updateScale(0.5);
-        } else if (event.type == "x0.5") {
-          Matter.Body.scale(circle, 2, 2);
-          ball.updateScale(2);
+        if (event.type == "x2" || event.type == "x0.5") {
+          const scale = 1 / ball.getMultiply();
+          Matter.Body.scale(circle, scale, scale);
+          ball.updateScale(scale);
+          ball.setMultiply(1);
         }
         event.setNone();
       }
@@ -258,10 +259,12 @@ export const HandSketch = ({ handpose }: Props) => {
   };
 
   setInterval(function () {
-    const types = ["x2", "x0.5"];
-    const typeId = Math.floor(Math.random() * 2);
-    event = new Event(types[typeId], 50);
-  }, 60000);
+    if (!event.getIsAlive()) {
+      const types = ["x2", "x0.5"];
+      const typeId = Math.floor(Math.random() * 2);
+      event = new Event(types[typeId], 50);
+    }
+  }, 30000);
 
   return (
     <>

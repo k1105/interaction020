@@ -14,13 +14,19 @@ export class Event extends Target {
     this.state = "none";
     this.isAlive = true;
   }
+
+  getIsAlive() {
+    return this.isAlive;
+  }
+
   update(ball: Ball) {
     if (
       this.isAlive &&
       this.isHit(
         ball.body.position,
         ball.body.bounds.max.x - ball.body.bounds.min.x
-      )
+      ) &&
+      ball.getMultiply() == 1
     ) {
       this.effectFire();
       this.fire();
