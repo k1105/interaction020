@@ -49,6 +49,7 @@ export class Event extends Target {
       if (this.position.x > window.innerWidth + this.size) {
         //画面外にイベントがはみ出したときに死滅する
         this.isAlive = false;
+        this.isExpired = true;
       }
     }
   }
