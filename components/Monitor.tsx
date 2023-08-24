@@ -92,9 +92,7 @@ export const Monitor = ({ handpose, debugLog }: Props) => {
   addEventListener("keydown", (event) => {
     if (event.code == "KeyC") {
       setDebugVisibility(!debugVisibility);
-    }
-
-    if (event.code == "KeyV") {
+    } else if (event.code == "KeyV") {
       const body = document.body;
       if (body.style.cursor == "none") {
         body.style.cursor = "default";
@@ -107,24 +105,6 @@ export const Monitor = ({ handpose, debugLog }: Props) => {
   return (
     <>
       <div style={{ position: "absolute", top: 0, left: 0, zIndex: 99 }}>
-        {/* <button
-          onClick={() => {
-            setDebugVisibility(!debugVisibility);
-          }}
-          style={{
-            position: "absolute",
-            top: "30px",
-            left: "30px",
-            width: "100px",
-            height: "30px",
-            background: !debugVisibility ? "rgba(0,0,0,0)" : "#fff",
-            border: "1px solid #ffffff",
-            color: debugVisibility ? "#011960" : "#fff",
-            borderRadius: "5px",
-          }}
-        >
-          {!debugVisibility ? "Show Monitor" : "Hide Monitor"}
-        </button> */}
         {debugVisibility && (
           <>
             <Sketch

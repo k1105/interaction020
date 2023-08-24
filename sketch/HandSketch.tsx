@@ -139,7 +139,6 @@ export const HandSketch = ({ handpose }: Props) => {
       p5.noFill();
       p5.strokeWeight(2);
       p5.line(0, 0, distList[i].x, distList[i].y);
-      //p5.circle(0, 0, 2 * Math.sqrt(distList[i].x ** 2 + distList[i].y ** 2));
       p5.pop();
     }
 
