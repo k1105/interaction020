@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import p5Types from "p5";
-import { MutableRefObject, useRef, useState } from "react";
+import { MutableRefObject, useRef } from "react";
 import { Hand } from "@tensorflow-models/hand-pose-detection";
 import { getSmoothedHandpose } from "../lib/getSmoothedHandpose";
 import { updateHandposeHistory } from "../lib/updateHandposeHistory";
@@ -16,10 +16,6 @@ type Props = {
   handpose: MutableRefObject<Hand[]>;
 };
 
-const distList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
-
-const eventTarget = new Event("x2");
-
 type Handpose = Keypoint[];
 
 const Sketch = dynamic(import("react-p5"), {
@@ -33,8 +29,8 @@ export const HandSketch = ({ handpose }: Props) => {
     right: Handpose[];
   } = { left: [], right: [] };
 
+  const distList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
   const debugLog = useRef<{ label: string; value: any }[]>([]);
-  const targetRef = useRef<Keypoint>({ x: 0, y: 0 });
   const scoreRef = useRef<number>(0);
   const bestScoreRef = useRef<number>(0);
 
@@ -54,8 +50,10 @@ export const HandSketch = ({ handpose }: Props) => {
       )
     );
   }
-  const balls: Ball[] = [];
 
+  const targetRef = useRef<Keypoint>({ x: 0, y: 0 });
+  const event = new Event("x2");
+  const balls: Ball[] = [];
   for (let i = 0; i < 1; i++) {
     balls.push(new Ball({ x: window.innerWidth / 2, y: -1000 }, 80));
   }
@@ -215,21 +213,21 @@ export const HandSketch = ({ handpose }: Props) => {
         scoreRef.current = 0;
       }
 
-      if (eventTarget.getState() == "fired") {
-        if ((eventTarget.type = "x2")) {
+      if (event.getState() == "fired") {
+        if ((event.type = "x2")) {
           Matter.Body.scale(circle, 2, 2);
           ball.updateScale(2);
-          eventTarget.setNone();
+          event.setNone();
         }
-      } else if (eventTarget.getState() == "expired") {
-        if ((eventTarget.type = "x2")) {
+      } else if (event.getState() == "expired") {
+        if ((event.type = "x2")) {
           Matter.Body.scale(circle, 0.5, 0.5);
           ball.updateScale(0.5);
-          eventTarget.setNone();
+          event.setNone();
         }
       }
 
-      eventTarget.update(ball);
+      event.update(ball);
 
       if (
         (circle.position.x - targetRef.current.x) ** 2 +
@@ -252,7 +250,7 @@ export const HandSketch = ({ handpose }: Props) => {
     for (const ball of balls) {
       ball.show(p5);
     }
-    eventTarget.show(p5);
+    event.show(p5);
 
     p5.textSize(20);
     p5.text("Score: " + String(scoreRef.current), 100, p5.height - 140);
