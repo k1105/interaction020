@@ -9,6 +9,7 @@ import { convertHandToHandpose } from "../lib/converter/convertHandToHandpose";
 import { isFront } from "../lib/calculator/isFront";
 import { Monitor } from "../components/Monitor";
 import Matter from "matter-js";
+import { Ball } from "../lib/BallClass";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -52,10 +53,10 @@ export const HandSketch = ({ handpose }: Props) => {
       )
     );
   }
-  const circles: Matter.Body[] = [];
+  const balls: Ball[] = [];
 
   for (let i = 0; i < 1; i++) {
-    circles.push(Bodies.circle(window.innerWidth / 2, -1000, 80));
+    balls.push(new Ball({ x: window.innerWidth / 2, y: -1000 }, 80));
   }
 
   // create an engine
@@ -71,7 +72,7 @@ export const HandSketch = ({ handpose }: Props) => {
     p5.fill(255);
     p5.strokeWeight(10);
     engine = Engine.create();
-    Composite.add(engine.world, [...circles, ...floors]);
+    Composite.add(engine.world, [...balls.map((b) => b.body), ...floors]);
     targetRef.current = {
       x: (0.8 * p5.random() + 0.1) * p5.windowWidth,
       y: (p5.random() * p5.windowHeight) / 3,
@@ -205,7 +206,8 @@ export const HandSketch = ({ handpose }: Props) => {
 
     p5.circle(targetRef.current.x, targetRef.current.y, 30);
 
-    for (const circle of circles) {
+    for (const ball of balls) {
+      const circle = ball.body;
       const circleSize = circle.bounds.max.x - circle.bounds.min.x;
       if (circle.position.y > 2000) {
         Matter.Body.setPosition(circle, { x: window.innerWidth / 2, y: -1000 });
@@ -222,6 +224,7 @@ export const HandSketch = ({ handpose }: Props) => {
         eventTarget.position.x = -100;
         eventTarget.isActive = false;
         Matter.Body.scale(circle, 2, 2);
+        ball.updateScale(2);
       }
 
       if (
@@ -242,9 +245,8 @@ export const HandSketch = ({ handpose }: Props) => {
     Engine.update(engine);
 
     /* draw circle */
-    for (const circle of circles) {
-      const circleSize = circle.bounds.max.x - circle.bounds.min.x;
-      p5.circle(circle.position.x, circle.position.y, circleSize);
+    for (const ball of balls) {
+      ball.show(p5);
     }
 
     p5.push();
