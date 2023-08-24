@@ -5,6 +5,7 @@ import { Target } from "./TargetClass";
 export class Event extends Target {
   private expire: number;
   private isAlive: boolean;
+  private isExpired: boolean;
   state: "fired" | "expired" | "none";
   type: string;
   constructor(type: string, size: number) {
@@ -13,10 +14,15 @@ export class Event extends Target {
     this.type = type;
     this.state = "none";
     this.isAlive = true;
+    this.isExpired = false;
   }
 
   getIsAlive() {
     return this.isAlive;
+  }
+
+  getIsExpired() {
+    return this.isExpired;
   }
 
   update(ball: Ball) {
@@ -34,6 +40,7 @@ export class Event extends Target {
 
     if (this.expire > 0 && Date.now() > this.expire) {
       this.state = "expired";
+      this.isExpired = true;
       this.expire = 0;
     }
 

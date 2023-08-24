@@ -266,7 +266,7 @@ export const HandSketch = ({ handpose }: Props) => {
   };
 
   setInterval(function () {
-    if (!event.getIsAlive()) {
+    if (!event.getIsAlive() && event.getIsExpired()) {
       const types = ["x2", "x0.5"];
       const typeId = Math.floor(Math.random() * 2);
       event = new Event(types[typeId], 50);
