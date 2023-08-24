@@ -7,18 +7,20 @@ export class Ball {
   private displaySize: number;
   private t: number;
   private scale: number;
+  private currentScale: number;
   private targetScale: number;
   constructor(position: Keypoint, size: number) {
     this.body = Matter.Bodies.circle(position.x, position.y, size);
     this.displaySize = size * 2;
     this.scale = 1;
+    this.currentScale = 1;
     this.targetScale = 1;
     this.t = 1;
   }
 
   show(p5: p5Types) {
     if (this.t < 1) {
-      this.scale = 1 - this.t + this.t * this.targetScale;
+      this.scale = (1 - this.t) * this.currentScale + this.t * this.targetScale;
     }
     p5.circle(
       this.body.position.x,
@@ -29,7 +31,8 @@ export class Ball {
   }
 
   updateScale(scale: number) {
-    this.targetScale = scale;
+    this.currentScale = this.scale;
+    this.targetScale = scale * this.scale;
     this.t = 0;
   }
 }

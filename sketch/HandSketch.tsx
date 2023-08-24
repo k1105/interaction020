@@ -10,6 +10,7 @@ import { isFront } from "../lib/calculator/isFront";
 import { Monitor } from "../components/Monitor";
 import Matter from "matter-js";
 import { Ball } from "../lib/BallClass";
+import { Event } from "../lib/EventClass";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -17,7 +18,7 @@ type Props = {
 
 const distList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
 
-const eventTarget = { position: { x: 0, y: 100 }, type: "x2", isActive: true };
+const eventTarget = new Event("x2");
 
 type Handpose = Keypoint[];
 
@@ -214,18 +215,21 @@ export const HandSketch = ({ handpose }: Props) => {
         scoreRef.current = 0;
       }
 
-      if (
-        eventTarget.isActive &&
-        (circle.position.x - eventTarget.position.x) ** 2 +
-          (circle.position.y - eventTarget.position.y) ** 2 <
-          (30 + circleSize / 2) ** 2
-      ) {
-        // hit
-        eventTarget.position.x = -100;
-        eventTarget.isActive = false;
-        Matter.Body.scale(circle, 2, 2);
-        ball.updateScale(2);
+      if (eventTarget.getState() == "fired") {
+        if ((eventTarget.type = "x2")) {
+          Matter.Body.scale(circle, 2, 2);
+          ball.updateScale(2);
+          eventTarget.setNone();
+        }
+      } else if (eventTarget.getState() == "expired") {
+        if ((eventTarget.type = "x2")) {
+          Matter.Body.scale(circle, 0.5, 0.5);
+          ball.updateScale(0.5);
+          eventTarget.setNone();
+        }
       }
+
+      eventTarget.update(ball);
 
       if (
         (circle.position.x - targetRef.current.x) ** 2 +
@@ -248,25 +252,7 @@ export const HandSketch = ({ handpose }: Props) => {
     for (const ball of balls) {
       ball.show(p5);
     }
-
-    p5.push();
-    p5.noFill();
-    p5.stroke(255);
-    p5.strokeWeight(1);
-    if (eventTarget.isActive) {
-      eventTarget.position.x += 0.5;
-    }
-    p5.circle(eventTarget.position.x, eventTarget.position.y, 30);
-    p5.textAlign(p5.CENTER);
-    p5.textSize(10);
-    p5.fill(255);
-    p5.noStroke();
-    p5.text(
-      eventTarget.type,
-      eventTarget.position.x,
-      eventTarget.position.y + (p5.textAscent() - p5.textDescent()) / 2
-    );
-    p5.pop();
+    eventTarget.show(p5);
 
     p5.textSize(20);
     p5.text("Score: " + String(scoreRef.current), 100, p5.height - 140);
