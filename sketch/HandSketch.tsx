@@ -261,7 +261,7 @@ export const HandSketch = ({ handpose }: Props) => {
     const types = ["x2", "x0.5"];
     const typeId = Math.floor(Math.random() * 2);
     event = new Event(types[typeId], 50);
-  }, 50000);
+  }, 60000);
 
   return (
     <>
