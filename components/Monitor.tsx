@@ -93,6 +93,15 @@ export const Monitor = ({ handpose, debugLog }: Props) => {
     if (event.code == "KeyC") {
       setDebugVisibility(!debugVisibility);
     }
+
+    if (event.code == "KeyV") {
+      const body = document.body;
+      if (body.style.cursor == "none") {
+        body.style.cursor = "default";
+      } else {
+        body.style.cursor = "none";
+      }
+    }
   });
 
   return (
