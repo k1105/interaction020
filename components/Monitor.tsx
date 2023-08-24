@@ -89,10 +89,16 @@ export const Monitor = ({ handpose, debugLog }: Props) => {
     p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
   };
 
+  addEventListener("keydown", (event) => {
+    if (event.code == "KeyC") {
+      setDebugVisibility(!debugVisibility);
+    }
+  });
+
   return (
     <>
       <div style={{ position: "absolute", top: 0, left: 0, zIndex: 99 }}>
-        <button
+        {/* <button
           onClick={() => {
             setDebugVisibility(!debugVisibility);
           }}
@@ -109,7 +115,7 @@ export const Monitor = ({ handpose, debugLog }: Props) => {
           }}
         >
           {!debugVisibility ? "Show Monitor" : "Hide Monitor"}
-        </button>
+        </button> */}
         {debugVisibility && (
           <>
             <Sketch

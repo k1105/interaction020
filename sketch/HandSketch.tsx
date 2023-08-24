@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import p5Types from "p5";
-import { MutableRefObject, useRef } from "react";
+import { MutableRefObject, useRef, useState } from "react";
 import { Hand } from "@tensorflow-models/hand-pose-detection";
 import { getSmoothedHandpose } from "../lib/getSmoothedHandpose";
 import { updateHandposeHistory } from "../lib/updateHandposeHistory";
@@ -31,6 +31,8 @@ export const HandSketch = ({ handpose }: Props) => {
   } = { left: [], right: [] };
 
   const debugLog = useRef<{ label: string; value: any }[]>([]);
+  const targetRef = useRef<Keypoint>({ x: 0, y: 0 });
+  const scoreRef = useRef<number>(0);
 
   const circleSize = 80;
 
@@ -50,7 +52,11 @@ export const HandSketch = ({ handpose }: Props) => {
       )
     );
   }
-  const circle = Bodies.circle(window.innerWidth / 2, -1000, circleSize);
+  const circles: Matter.Body[] = [];
+
+  for (let i = 0; i < 2; i++) {
+    circles.push(Bodies.circle(200 * (i + 1), -1000, circleSize));
+  }
 
   // create an engine
   let engine: Matter.Engine;
@@ -65,7 +71,11 @@ export const HandSketch = ({ handpose }: Props) => {
     p5.fill(255);
     p5.strokeWeight(10);
     engine = Engine.create();
-    Composite.add(engine.world, [circle, ...floors]);
+    Composite.add(engine.world, [...circles, ...floors]);
+    targetRef.current = {
+      x: p5.random() * p5.windowWidth,
+      y: (p5.random() * p5.windowHeight) / 3,
+    };
   };
 
   const draw = (p5: p5Types) => {
@@ -194,14 +204,38 @@ export const HandSketch = ({ handpose }: Props) => {
     }
     p5.pop();
 
-    if (circle.position.y > 3000) {
-      Matter.Body.setPosition(circle, { x: window.innerWidth / 2, y: -1000 });
+    p5.circle(targetRef.current.x, targetRef.current.y, 30);
+
+    for (const circle of circles) {
+      if (circle.position.y > 2000) {
+        Matter.Body.setPosition(circle, { x: window.innerWidth / 2, y: -1000 });
+        scoreRef.current = 0;
+      }
+
+      if (
+        (circle.position.x - targetRef.current.x) ** 2 +
+          (circle.position.y - targetRef.current.y) ** 2 <
+        (30 + circleSize) ** 2
+      ) {
+        // hit
+        scoreRef.current += 10;
+        targetRef.current = {
+          x: p5.random() * p5.windowWidth,
+          y: (p5.random() * p5.windowHeight) / 3,
+        };
+      }
     }
 
     Engine.update(engine);
-    p5.circle(circle.position.x, circle.position.y, circleSize * 2);
+
+    for (const circle of circles) {
+      p5.circle(circle.position.x, circle.position.y, circleSize * 2);
+    }
 
     p5.rectMode(p5.CENTER);
+
+    p5.textSize(40);
+    p5.text(String(scoreRef.current), 100, p5.height - 100);
   };
 
   const windowResized = (p5: p5Types) => {
@@ -211,7 +245,7 @@ export const HandSketch = ({ handpose }: Props) => {
   return (
     <>
       <Monitor handpose={handpose} debugLog={debugLog} />
-      <Recorder handpose={handpose} />
+      {/* <Recorder handpose={handpose} /> */}
       <Sketch
         preload={preload}
         setup={setup}
