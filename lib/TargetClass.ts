@@ -14,7 +14,7 @@ export class Target {
     this.range = range;
     this.position = {
       x: (Math.random() * 0.8 + 0.1) * range.x,
-      y: Math.random() * range.y * 0.3,
+      y: (Math.random() * 0.3 + 0.1) * range.y,
     };
     this.size = size;
     this.t = 1;
@@ -48,7 +48,7 @@ export class Target {
       if (this.state == "death") {
         this.position = {
           x: (Math.random() * 0.8 + 0.1) * this.range.x,
-          y: Math.random() * this.range.y * 0.3,
+          y: (Math.random() * 0.3 + 0.1) * this.range.y,
         };
         this.state = "born";
         this.t = 0;
