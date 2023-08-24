@@ -50,8 +50,11 @@ export const HandSketch = ({ handpose }: Props) => {
     );
   }
 
-  const point = new Point({ x: window.innerWidth, y: window.innerHeight }, 30);
-  const event = new Event("x2", 30);
+  const points: Point[] = [];
+  for (let i = 0; i < 3; i++) {
+    points.push(new Point({ x: window.innerWidth, y: window.innerHeight }, 30));
+  }
+  let event = new Event("x0.5", 50);
   const balls: Ball[] = [];
   for (let i = 0; i < 1; i++) {
     balls.push(new Ball({ x: window.innerWidth / 2, y: -1000 }, 80));
@@ -209,22 +212,31 @@ export const HandSketch = ({ handpose }: Props) => {
       }
 
       if (event.getState() == "fired") {
-        if ((event.type = "x2")) {
+        if (event.type == "x2") {
           Matter.Body.scale(circle, 2, 2);
           ball.updateScale(2);
-          event.setNone();
-        }
-      } else if (event.getState() == "expired") {
-        if ((event.type = "x2")) {
+        } else if (event.type == "x0.5") {
           Matter.Body.scale(circle, 0.5, 0.5);
           ball.updateScale(0.5);
-          event.setNone();
         }
+        event.setNone();
+      } else if (event.getState() == "expired") {
+        if (event.type == "x2") {
+          Matter.Body.scale(circle, 0.5, 0.5);
+          ball.updateScale(0.5);
+        } else if (event.type == "x0.5") {
+          Matter.Body.scale(circle, 2, 2);
+          ball.updateScale(2);
+        }
+        event.setNone();
       }
 
       event.update(ball);
-      point.update(ball, score);
       bestScore.current = Math.max(score.current, bestScore.current);
+    }
+
+    for (const point of points) {
+      point.update(balls, score);
     }
 
     Engine.update(engine);
@@ -234,7 +246,7 @@ export const HandSketch = ({ handpose }: Props) => {
       ball.show(p5);
     }
     event.show(p5);
-    point.show(p5);
+    for (const point of points) point.show(p5);
 
     p5.textSize(20);
     p5.text("Score: " + String(score.current), 100, p5.height - 140);
@@ -244,6 +256,12 @@ export const HandSketch = ({ handpose }: Props) => {
   const windowResized = (p5: p5Types) => {
     p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
   };
+
+  setInterval(function () {
+    const types = ["x2", "x0.5"];
+    const typeId = Math.floor(Math.random() * 2);
+    event = new Event(types[typeId], 50);
+  }, 50000);
 
   return (
     <>

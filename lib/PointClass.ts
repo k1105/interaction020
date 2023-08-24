@@ -22,19 +22,21 @@ export class Point extends Target {
     this.state = "none";
   }
 
-  update(ball: Ball, score: MutableRefObject<number>) {
-    if (
-      this.state == "none" &&
-      this.isHit(
-        ball.body.position,
-        ball.body.bounds.max.x - ball.body.bounds.min.x
-      )
-    ) {
-      // hit
-      score.current += 10;
-      this.state = "death";
-      this.t = 0;
-      this.effectFire();
+  update(balls: Ball[], score: MutableRefObject<number>) {
+    for (const ball of balls) {
+      if (
+        this.state == "none" &&
+        this.isHit(
+          ball.body.position,
+          ball.body.bounds.max.x - ball.body.bounds.min.x
+        )
+      ) {
+        // hit
+        score.current += 10;
+        this.state = "death";
+        this.t = 0;
+        this.effectFire();
+      }
     }
   }
 
