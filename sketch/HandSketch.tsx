@@ -11,7 +11,7 @@ import { Monitor } from "../components/Monitor";
 import Matter from "matter-js";
 import { Ball } from "../lib/BallClass";
 import { Event } from "../lib/EventClass";
-import { Target } from "../lib/TargetClass";
+import { Point } from "../lib/PointClass";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -50,10 +50,7 @@ export const HandSketch = ({ handpose }: Props) => {
     );
   }
 
-  const target = new Target(
-    { x: window.innerWidth, y: window.innerHeight },
-    30
-  );
+  const point = new Point({ x: window.innerWidth, y: window.innerHeight }, 30);
   const event = new Event("x2");
   const balls: Ball[] = [];
   for (let i = 0; i < 1; i++) {
@@ -151,8 +148,8 @@ export const HandSketch = ({ handpose }: Props) => {
     for (let i = 0; i < 12; i++) {
       if (i < 11) {
         const currentWidth = floors[i].bounds.max.x - floors[i].bounds.min.x;
-        const targetWidth = 100;
-        Matter.Body.scale(floors[i], targetWidth / currentWidth, 1);
+        const pointWidth = 100;
+        Matter.Body.scale(floors[i], pointWidth / currentWidth, 1);
         const dist = p5.dist(
           distList[i + 1].x + p5.width / 11,
           distList[i + 1].y,
@@ -226,7 +223,7 @@ export const HandSketch = ({ handpose }: Props) => {
       }
 
       event.update(ball);
-      target.update(ball, score);
+      point.update(ball, score);
       bestScore.current = Math.max(score.current, bestScore.current);
     }
 
@@ -237,7 +234,7 @@ export const HandSketch = ({ handpose }: Props) => {
       ball.show(p5);
     }
     event.show(p5);
-    target.show(p5);
+    point.show(p5);
 
     p5.textSize(20);
     p5.text("Score: " + String(score.current), 100, p5.height - 140);

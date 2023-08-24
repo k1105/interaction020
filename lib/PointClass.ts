@@ -4,7 +4,7 @@ import { MutableRefObject } from "react";
 import { powDist } from "./calculator/powDist";
 import p5Types from "p5";
 
-export class Target {
+export class Point {
   private range: Keypoint;
   private position: Keypoint;
   size: number;
