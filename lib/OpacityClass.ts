@@ -9,7 +9,7 @@ export class Opacity {
     if (this.t < 1) {
       this.t += 0.05;
     }
-    this.value = 255 * (1 - this.t) * (Math.sin(this.t * 20) * 0.5 + 0.5);
+    this.value = 100 * (1 - this.t) * (Math.sin(this.t * 20) * 0.5 + 0.5);
   }
   pulse() {
     this.t = 0;
