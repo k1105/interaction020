@@ -34,6 +34,7 @@ export const HandSketch = ({ handpose }: Props) => {
   const debugLog = useRef<{ label: string; value: any }[]>([]);
   const targetRef = useRef<Keypoint>({ x: 0, y: 0 });
   const scoreRef = useRef<number>(0);
+  const bestScoreRef = useRef<number>(0);
 
   // module aliases
   let Engine = Matter.Engine,
@@ -230,6 +231,7 @@ export const HandSketch = ({ handpose }: Props) => {
       ) {
         // hit
         scoreRef.current += 10;
+        bestScoreRef.current = Math.max(scoreRef.current, bestScoreRef.current);
         targetRef.current = {
           x: (0.8 * p5.random() + 0.1) * p5.windowWidth,
           y: (p5.random() * p5.windowHeight) / 3,
@@ -264,8 +266,13 @@ export const HandSketch = ({ handpose }: Props) => {
     );
     p5.pop();
 
-    p5.textSize(40);
-    p5.text(String(scoreRef.current), 100, p5.height - 100);
+    p5.textSize(20);
+    p5.text("Score: " + String(scoreRef.current), 100, p5.height - 140);
+    p5.text(
+      "Best Score: " + String(bestScoreRef.current),
+      100,
+      p5.height - 100
+    );
   };
 
   const windowResized = (p5: p5Types) => {
