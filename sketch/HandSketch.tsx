@@ -227,7 +227,8 @@ export const HandSketch = ({ handpose }: Props) => {
           ball.updateScale(0.5);
         }
         event.setNone();
-      } else if (event.getState() == "expired") {
+      }
+      if (event.getState() == "expired") {
         if (event.type == "x2" || event.type == "x0.5") {
           const scale = 1 / ball.getMultiply();
           Matter.Body.scale(circle, scale, scale);
