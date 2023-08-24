@@ -1,6 +1,4 @@
-import { Keypoint } from "@tensorflow-models/hand-pose-detection";
 import { Ball } from "./BallClass";
-import { powDist } from "./calculator/powDist";
 import p5Types from "p5";
 import { Target } from "./TargetClass";
 
