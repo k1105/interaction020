@@ -22,6 +22,7 @@ export class Event extends Target {
         ball.body.bounds.max.x - ball.body.bounds.min.x
       )
     ) {
+      this.effectFire();
       this.fire();
     }
 
@@ -63,6 +64,7 @@ export class Event extends Target {
       );
       p5.pop();
     }
+    this.showEffect(p5);
   }
 
   getState() {
