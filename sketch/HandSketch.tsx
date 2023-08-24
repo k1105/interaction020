@@ -11,6 +11,7 @@ import { Monitor } from "../components/Monitor";
 import Matter from "matter-js";
 import { Ball } from "../lib/BallClass";
 import { Event } from "../lib/EventClass";
+import { Target } from "../lib/TargetClass";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -31,8 +32,6 @@ export const HandSketch = ({ handpose }: Props) => {
 
   const distList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
   const debugLog = useRef<{ label: string; value: any }[]>([]);
-  const scoreRef = useRef<number>(0);
-  const bestScoreRef = useRef<number>(0);
 
   // module aliases
   let Engine = Matter.Engine,
@@ -51,12 +50,18 @@ export const HandSketch = ({ handpose }: Props) => {
     );
   }
 
-  const targetRef = useRef<Keypoint>({ x: 0, y: 0 });
+  const target = new Target(
+    { x: window.innerWidth, y: window.innerHeight },
+    30
+  );
   const event = new Event("x2");
   const balls: Ball[] = [];
   for (let i = 0; i < 1; i++) {
     balls.push(new Ball({ x: window.innerWidth / 2, y: -1000 }, 80));
   }
+
+  const score = useRef<number>(0);
+  const bestScore = useRef<number>(0);
 
   // create an engine
   let engine: Matter.Engine;
@@ -72,10 +77,6 @@ export const HandSketch = ({ handpose }: Props) => {
     p5.strokeWeight(10);
     engine = Engine.create();
     Composite.add(engine.world, [...balls.map((b) => b.body), ...floors]);
-    targetRef.current = {
-      x: (0.8 * p5.random() + 0.1) * p5.windowWidth,
-      y: (p5.random() * p5.windowHeight) / 3,
-    };
   };
 
   const draw = (p5: p5Types) => {
@@ -203,14 +204,11 @@ export const HandSketch = ({ handpose }: Props) => {
     }
     p5.pop();
 
-    p5.circle(targetRef.current.x, targetRef.current.y, 30);
-
     for (const ball of balls) {
       const circle = ball.body;
-      const circleSize = circle.bounds.max.x - circle.bounds.min.x;
       if (circle.position.y > 2000) {
         Matter.Body.setPosition(circle, { x: window.innerWidth / 2, y: -1000 });
-        scoreRef.current = 0;
+        score.current = 0;
       }
 
       if (event.getState() == "fired") {
@@ -228,20 +226,8 @@ export const HandSketch = ({ handpose }: Props) => {
       }
 
       event.update(ball);
-
-      if (
-        (circle.position.x - targetRef.current.x) ** 2 +
-          (circle.position.y - targetRef.current.y) ** 2 <
-        (30 + circleSize / 2) ** 2
-      ) {
-        // hit
-        scoreRef.current += 10;
-        bestScoreRef.current = Math.max(scoreRef.current, bestScoreRef.current);
-        targetRef.current = {
-          x: (0.8 * p5.random() + 0.1) * p5.windowWidth,
-          y: (p5.random() * p5.windowHeight) / 3,
-        };
-      }
+      target.update(ball, score);
+      bestScore.current = Math.max(score.current, bestScore.current);
     }
 
     Engine.update(engine);
@@ -251,14 +237,11 @@ export const HandSketch = ({ handpose }: Props) => {
       ball.show(p5);
     }
     event.show(p5);
+    target.show(p5);
 
     p5.textSize(20);
-    p5.text("Score: " + String(scoreRef.current), 100, p5.height - 140);
-    p5.text(
-      "Best Score: " + String(bestScoreRef.current),
-      100,
-      p5.height - 100
-    );
+    p5.text("Score: " + String(score.current), 100, p5.height - 140);
+    p5.text("Best Score: " + String(bestScore.current), 100, p5.height - 100);
   };
 
   const windowResized = (p5: p5Types) => {
