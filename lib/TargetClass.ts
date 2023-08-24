@@ -56,6 +56,10 @@ export class Target {
         this.state = "none";
       }
     }
-    p5.circle(this.position.x, this.position.y, 30 * scale);
+    p5.circle(
+      this.position.x,
+      this.position.y,
+      30 * scale * (Math.sin(Date.now() / 300) * 0.15 + 0.85)
+    );
   }
 }
