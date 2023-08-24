@@ -12,6 +12,7 @@ import Matter from "matter-js";
 import { Ball } from "../lib/BallClass";
 import { Event } from "../lib/EventClass";
 import { Point } from "../lib/PointClass";
+import { Opacity } from "../lib/OpacityClass";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -60,6 +61,8 @@ export const HandSketch = ({ handpose }: Props) => {
     balls.push(new Ball({ x: window.innerWidth / 2, y: -1000 }, 80));
   }
 
+  const opacity = new Opacity();
+
   const score = useRef<number>(0);
   const bestScore = useRef<number>(0);
 
@@ -105,6 +108,7 @@ export const HandSketch = ({ handpose }: Props) => {
     }
 
     p5.clear();
+    p5.background(255, opacity.value);
 
     p5.noStroke();
     //base circle
@@ -209,6 +213,7 @@ export const HandSketch = ({ handpose }: Props) => {
       if (circle.position.y > 2000) {
         Matter.Body.setPosition(circle, { x: window.innerWidth / 2, y: -1000 });
         score.current = 0;
+        opacity.pulse();
       }
 
       if (event.getState() == "fired") {
@@ -241,6 +246,7 @@ export const HandSketch = ({ handpose }: Props) => {
     }
 
     Engine.update(engine);
+    opacity.update();
 
     /* draw circle */
     for (const ball of balls) {
