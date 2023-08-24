@@ -2,27 +2,27 @@ import { Keypoint } from "@tensorflow-models/hand-pose-detection";
 import { Ball } from "./BallClass";
 import { powDist } from "./calculator/powDist";
 import p5Types from "p5";
+import { Target } from "./TargetClass";
 
-export class Event {
+export class Event extends Target {
   private expire: number;
-  private size: number;
-  private position: Keypoint;
   private isAlive: boolean;
   state: "fired" | "expired" | "none";
   type: string;
-  constructor(type: string) {
+  constructor(type: string, size: number) {
+    super({ x: -size, y: 100 }, size);
     this.expire = 0;
-    this.size = 30;
     this.type = type;
-    this.position = { x: -this.size, y: 100 };
     this.state = "none";
     this.isAlive = true;
   }
   update(ball: Ball) {
     if (
       this.isAlive &&
-      powDist(ball.body.position, this.position) <
-        ((this.size + ball.body.bounds.max.x - ball.body.bounds.min.x) / 2) ** 2
+      this.isHit(
+        ball.body.position,
+        ball.body.bounds.max.x - ball.body.bounds.min.x
+      )
     ) {
       this.fire();
     }

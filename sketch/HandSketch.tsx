@@ -51,7 +51,7 @@ export const HandSketch = ({ handpose }: Props) => {
   }
 
   const point = new Point({ x: window.innerWidth, y: window.innerHeight }, 30);
-  const event = new Event("x2");
+  const event = new Event("x2", 30);
   const balls: Ball[] = [];
   for (let i = 0; i < 1; i++) {
     balls.push(new Ball({ x: window.innerWidth / 2, y: -1000 }, 80));

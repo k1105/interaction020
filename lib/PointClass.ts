@@ -3,20 +3,22 @@ import { Ball } from "./BallClass";
 import { MutableRefObject } from "react";
 import { powDist } from "./calculator/powDist";
 import p5Types from "p5";
+import { Target } from "./TargetClass";
 
-export class Point {
+export class Point extends Target {
   private range: Keypoint;
-  private position: Keypoint;
-  size: number;
   state: "born" | "death" | "none";
   private t: number;
   constructor(range: Keypoint, size: number) {
+    super(
+      {
+        x: (Math.random() * 0.8 + 0.1) * range.x,
+        y: (Math.random() * 0.3 + 0.1) * range.y,
+      },
+      size
+    );
     this.range = range;
-    this.position = {
-      x: (Math.random() * 0.8 + 0.1) * range.x,
-      y: (Math.random() * 0.3 + 0.1) * range.y,
-    };
-    this.size = size;
+
     this.t = 1;
     this.state = "none";
   }
@@ -24,8 +26,10 @@ export class Point {
   update(ball: Ball, score: MutableRefObject<number>) {
     if (
       this.state == "none" &&
-      powDist(ball.body.position, this.position) <
-        ((this.size + ball.body.bounds.max.x - ball.body.bounds.min.x) / 2) ** 2
+      this.isHit(
+        ball.body.position,
+        ball.body.bounds.max.x - ball.body.bounds.min.x
+      )
     ) {
       // hit
       score.current += 10;
