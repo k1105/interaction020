@@ -5,8 +5,6 @@ import p5Types from "p5";
 import { Target } from "./TargetClass";
 
 export class Point extends Target {
-  private range: Keypoint;
-  state: "born" | "dead" | "none";
   private t: number;
   constructor(range: Keypoint, size: number) {
     super(
@@ -16,16 +14,15 @@ export class Point extends Target {
       },
       size
     );
-    this.range = range;
 
-    this.t = 1;
-    this.state = "none";
+    this.t = 0;
+    this.state = "alive";
   }
 
   update(balls: Ball[], score: MutableRefObject<number>) {
     for (const ball of balls) {
       if (
-        this.state == "none" &&
+        this.state == "alive" &&
         this.isHit(
           ball.body.position,
           ball.body.bounds.max.x - ball.body.bounds.min.x
@@ -33,9 +30,27 @@ export class Point extends Target {
       ) {
         // hit
         score.current += 10;
-        this.state = "dead";
+        this.state = "hit";
         this.t = 0;
         this.effectFire();
+      }
+    }
+
+    if (this.state == "born") {
+      this.state = "aborning";
+    }
+    if (this.state == "hit") {
+      this.state = "dying";
+    }
+    if (this.t < 1) {
+      this.t += 0.05;
+    }
+
+    if (this.t >= 1) {
+      if (this.state == "dying") {
+        this.state = "dead";
+      } else {
+        this.state = "alive";
       }
     }
   }
@@ -43,25 +58,9 @@ export class Point extends Target {
   show(p5: p5Types) {
     let scale = 1;
     if (this.t < 1) {
-      if (this.state == "dead") {
-        scale = 1 - this.t;
-      } else {
-        scale = this.t;
-      }
-      this.t += 0.05;
+      scale = this.state == "dying" ? 1 - this.t : this.t;
     }
-    if (this.t <= 1 && this.state !== "none") {
-      if (this.state == "dead") {
-        this.position = {
-          x: (Math.random() * 0.8 + 0.1) * this.range.x,
-          y: (Math.random() * 0.3 + 0.1) * this.range.y,
-        };
-        this.state = "born";
-        this.t = 0;
-      } else {
-        this.state = "none";
-      }
-    }
+
     p5.circle(
       this.position.x,
       this.position.y,

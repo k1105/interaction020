@@ -259,6 +259,20 @@ export const HandSketch = ({ handpose }: Props) => {
 
     for (const point of points) {
       point.update(balls, score);
+      if (point.state == "dead") {
+        const target = points.indexOf(point);
+        points.splice(target, 1);
+      }
+    }
+
+    if (points.length == 0) {
+      setTimeout(function () {
+        while (points.length < 3) {
+          points.push(
+            new Point({ x: window.innerWidth, y: window.innerHeight }, 30)
+          );
+        }
+      }, 1000);
     }
 
     Engine.update(engine);

@@ -5,6 +5,7 @@ import p5Types from "p5";
 export class Target {
   private effectTime: number;
   private effectState: "fired" | "none";
+  state: "born" | "aborning" | "alive" | "hit" | "dying" | "dead";
   position: Keypoint;
   private effectPosition: Keypoint;
   size: number;
@@ -14,6 +15,7 @@ export class Target {
     this.effectTime = 0;
     this.effectState = "none";
     this.effectPosition = position;
+    this.state = "born";
   }
 
   isHit(position: Keypoint, size: number) {

@@ -6,13 +6,13 @@ export class Event extends Target {
   private expire: number;
   private isAlive: boolean;
   private isExpired: boolean;
-  state: "fired" | "expired" | "none";
+  private eventState: "fired" | "expired" | "none";
   type: string;
   constructor(type: string, size: number) {
     super({ x: -size, y: 100 }, size);
     this.expire = 0;
     this.type = type;
-    this.state = "none";
+    this.eventState = "none";
     this.isAlive = true;
     this.isExpired = false;
   }
@@ -39,7 +39,7 @@ export class Event extends Target {
     }
 
     if (this.expire > 0 && Date.now() > this.expire) {
-      this.state = "expired";
+      this.eventState = "expired";
       this.isExpired = true;
       this.expire = 0;
     }
@@ -54,7 +54,7 @@ export class Event extends Target {
     }
   }
   private fire() {
-    this.state = "fired";
+    this.eventState = "fired";
     this.expire = Date.now() + 10000;
     this.isAlive = false;
     this.position.x = -this.size; //reset to initial position
@@ -82,10 +82,10 @@ export class Event extends Target {
   }
 
   getState() {
-    return this.state;
+    return this.eventState;
   }
 
   setNone() {
-    this.state = "none";
+    this.eventState = "none";
   }
 }
