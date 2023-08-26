@@ -1,6 +1,5 @@
 import { Keypoint } from "@tensorflow-models/hand-pose-detection";
 import { powDist } from "./calculator/powDist";
-import p5Types from "p5";
 
 export class Target {
   state: "born" | "aborning" | "alive" | "hit" | "dying" | "dead";

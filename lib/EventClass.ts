@@ -3,31 +3,23 @@ import p5Types from "p5";
 import { Target } from "./TargetClass";
 
 export class Event extends Target {
-  private expire: number;
-  private isAlive: boolean;
-  private isExpired: boolean;
-  private eventState: "fired" | "expired" | "none";
+  private expireAt: number;
+  private expired: boolean;
   type: string;
   constructor(type: string, size: number) {
     super({ x: -size, y: 100 }, size);
-    this.expire = 0;
+    this.expireAt = 0;
     this.type = type;
-    this.eventState = "none";
-    this.isAlive = true;
-    this.isExpired = false;
+    this.expired = false;
   }
 
-  getIsAlive() {
-    return this.isAlive;
-  }
-
-  getIsExpired() {
-    return this.isExpired;
+  isExpired() {
+    return this.expired;
   }
 
   update(ball: Ball) {
     if (
-      this.isAlive &&
+      this.state == "alive" &&
       this.isHit(
         ball.body.position,
         ball.body.bounds.max.x - ball.body.bounds.min.x
@@ -35,32 +27,24 @@ export class Event extends Target {
       ball.getMultiply() == 1
     ) {
       this.state = "hit";
-      this.fire();
+      this.expireAt = Date.now() + 10000;
     }
 
-    if (this.expire > 0 && Date.now() > this.expire) {
-      this.eventState = "expired";
-      this.isExpired = true;
-      this.expire = 0;
+    if (this.expireAt > 0 && Date.now() > this.expireAt) {
+      this.expired = true;
     }
 
-    if (this.isAlive) {
+    if (this.state == "alive") {
       this.position.x += 0.5;
       if (this.position.x > window.innerWidth + this.size) {
         //画面外にイベントがはみ出したときに死滅する
-        this.isAlive = false;
-        this.isExpired = true;
+        this.expired = true;
       }
     }
   }
-  private fire() {
-    this.eventState = "fired";
-    this.expire = Date.now() + 10000;
-    this.isAlive = false;
-  }
 
   show(p5: p5Types) {
-    if (this.isAlive) {
+    if (this.state == "alive") {
       p5.push();
       p5.noFill();
       p5.stroke(255);
@@ -77,13 +61,5 @@ export class Event extends Target {
       );
       p5.pop();
     }
-  }
-
-  getState() {
-    return this.eventState;
-  }
-
-  setNone() {
-    this.eventState = "none";
   }
 }

@@ -220,14 +220,11 @@ export const HandSketch = ({ handpose }: Props) => {
       }
 
       for (const event of events) {
+        if (event.state == "born") event.state = "alive";
         event.update(ball);
 
         if (event.state == "hit") {
           effectList.push(new Effect(event.position));
-          event.state = "dead";
-        }
-
-        if (event.getState() == "fired") {
           if (event.type == "x2") {
             Matter.Body.scale(circle, 2, 2);
             ball.setMultiply(2);
@@ -244,18 +241,18 @@ export const HandSketch = ({ handpose }: Props) => {
             balls.push(newBall);
             Composite.add(engine.world, newBall.body);
           }
-          event.setNone();
+          event.state = "dead";
         }
-        if (event.getState() == "expired") {
+
+        if (event.isExpired()) {
           if (event.type == "x2" || event.type == "x0.5") {
             const scale = 1 / ball.getMultiply();
             Matter.Body.scale(circle, scale, scale);
             ball.updateScale(scale);
             ball.setMultiply(1);
           }
-          event.setNone();
         }
-        if (event.state == "dead" && event.getIsExpired()) {
+        if (event.state == "dead" && event.isExpired()) {
           const target = events.indexOf(event);
           events.splice(target, 1);
         }
