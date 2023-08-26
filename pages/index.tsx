@@ -32,12 +32,14 @@ export default function App() {
         ) {
           predictionsRef.current = predictions;
           lostCountRef.current = 0;
+          sketchContainerRef.current!.style.filter = "blur(0px)";
         } else {
           lostCountRef.current++;
         }
 
         if (lostCountRef.current > 5) {
           predictionsRef.current = [];
+          sketchContainerRef.current!.style.filter = "blur(5px)";
         }
       }
     }
@@ -82,7 +84,10 @@ export default function App() {
 
       {ready && (
         <>
-          <div ref={sketchContainerRef}>
+          <div
+            ref={sketchContainerRef}
+            style={{ transition: "all 1000ms ease", filter: "blur(0px)" }}
+          >
             <HandSketch handpose={predictionsRef} />
           </div>
         </>
