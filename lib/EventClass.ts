@@ -34,7 +34,7 @@ export class Event extends Target {
       ) &&
       ball.getMultiply() == 1
     ) {
-      this.effectFire();
+      this.state = "hit";
       this.fire();
     }
 
@@ -57,7 +57,6 @@ export class Event extends Target {
     this.eventState = "fired";
     this.expire = Date.now() + 10000;
     this.isAlive = false;
-    this.position.x = -this.size; //reset to initial position
   }
 
   show(p5: p5Types) {
@@ -78,7 +77,6 @@ export class Event extends Target {
       );
       p5.pop();
     }
-    this.showEffect(p5);
   }
 
   getState() {

@@ -32,7 +32,6 @@ export class Point extends Target {
         score.current += 10;
         this.state = "hit";
         this.t = 0;
-        this.effectFire();
       }
     }
 
@@ -40,7 +39,7 @@ export class Point extends Target {
       this.state = "aborning";
     }
     if (this.state == "hit") {
-      this.state = "dying";
+      // this.state = "dying";
     }
     if (this.t < 1) {
       this.t += 0.05;
@@ -66,6 +65,5 @@ export class Point extends Target {
       this.position.y,
       30 * scale * (Math.sin(Date.now() / 300) * 0.15 + 0.85)
     );
-    this.showEffect(p5);
   }
 }

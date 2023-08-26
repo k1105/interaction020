@@ -56,7 +56,7 @@ export const HandSketch = ({ handpose }: Props) => {
   for (let i = 0; i < 3; i++) {
     points.push(new Point({ x: window.innerWidth, y: window.innerHeight }, 30));
   }
-  let event = new Event("+1", 50);
+  const events = [new Event("+1", 50)];
   const balls: Ball[] = [];
   for (let i = 0; i < 1; i++) {
     balls.push(new Ball({ x: window.innerWidth / 2, y: -1000 }, 80));
@@ -219,33 +219,48 @@ export const HandSketch = ({ handpose }: Props) => {
         balls.splice(target, 1);
       }
 
-      event.update(ball);
+      for (const event of events) {
+        event.update(ball);
 
-      if (event.getState() == "fired") {
-        if (event.type == "x2") {
-          Matter.Body.scale(circle, 2, 2);
-          ball.setMultiply(2);
-          ball.updateScale(2);
-        } else if (event.type == "x0.5") {
-          Matter.Body.scale(circle, 0.5, 0.5);
-          ball.setMultiply(0.5);
-          ball.updateScale(0.5);
-        } else if (event.type == "+1") {
-          const newBall = new Ball({ x: window.innerWidth / 2, y: -1000 }, 80);
-          balls.push(newBall);
-          Composite.add(engine.world, newBall.body);
+        if (event.state == "hit") {
+          effectList.push(new Effect(event.position));
+          event.state = "dead";
         }
-        event.setNone();
-      }
-      if (event.getState() == "expired") {
-        if (event.type == "x2" || event.type == "x0.5") {
-          const scale = 1 / ball.getMultiply();
-          Matter.Body.scale(circle, scale, scale);
-          ball.updateScale(scale);
-          ball.setMultiply(1);
+
+        if (event.getState() == "fired") {
+          if (event.type == "x2") {
+            Matter.Body.scale(circle, 2, 2);
+            ball.setMultiply(2);
+            ball.updateScale(2);
+          } else if (event.type == "x0.5") {
+            Matter.Body.scale(circle, 0.5, 0.5);
+            ball.setMultiply(0.5);
+            ball.updateScale(0.5);
+          } else if (event.type == "+1") {
+            const newBall = new Ball(
+              { x: window.innerWidth / 2, y: -1000 },
+              80
+            );
+            balls.push(newBall);
+            Composite.add(engine.world, newBall.body);
+          }
+          event.setNone();
         }
-        event.setNone();
+        if (event.getState() == "expired") {
+          if (event.type == "x2" || event.type == "x0.5") {
+            const scale = 1 / ball.getMultiply();
+            Matter.Body.scale(circle, scale, scale);
+            ball.updateScale(scale);
+            ball.setMultiply(1);
+          }
+          event.setNone();
+        }
+        if (event.state == "dead" && event.getIsExpired()) {
+          const target = events.indexOf(event);
+          events.splice(target, 1);
+        }
       }
+
       bestScore.current = Math.max(score.current, bestScore.current);
     }
 
@@ -259,9 +274,22 @@ export const HandSketch = ({ handpose }: Props) => {
 
     for (const point of points) {
       point.update(balls, score);
+      if (point.state == "hit") {
+        effectList.push(new Effect(point.position));
+        point.state = "dying";
+      }
       if (point.state == "dead") {
         const target = points.indexOf(point);
         points.splice(target, 1);
+      }
+    }
+
+    for (const effect of effectList) {
+      effect.update();
+      effect.show(p5);
+      if (effect.state == "dead") {
+        const target = effectList.indexOf(effect);
+        effectList.splice(target, 1);
       }
     }
 
@@ -282,7 +310,7 @@ export const HandSketch = ({ handpose }: Props) => {
     for (const ball of balls) {
       ball.show(p5);
     }
-    event.show(p5);
+    for (const event of events) event.show(p5);
     for (const point of points) point.show(p5);
 
     p5.textSize(20);
@@ -295,10 +323,10 @@ export const HandSketch = ({ handpose }: Props) => {
   };
 
   setInterval(function () {
-    if (!event.getIsAlive() && event.getIsExpired()) {
+    if (events.length == 0) {
       const types = ["x2", "x0.5", "+1"];
       const typeId = Math.floor(Math.random() * 3);
-      event = new Event(types[typeId], 50);
+      events.push(new Event(types[typeId], 50));
     }
   }, 30000);
 
