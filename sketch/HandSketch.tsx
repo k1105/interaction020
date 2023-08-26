@@ -43,7 +43,7 @@ export const HandSketch = ({ handpose }: Props) => {
   const floors: Matter.Body[] = [];
 
   const player = new Tone.Player(
-    "https://tonejs.github.io/audio/berklee/gong_1.mp3"
+    "https://k1105.github.io/sound_effect/audio/wood_attack.m4a"
   ).toDestination();
   for (let i = 0; i < 11; i++) {
     floors.push(
