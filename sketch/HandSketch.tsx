@@ -14,6 +14,7 @@ import { Event } from "../lib/EventClass";
 import { Point } from "../lib/PointClass";
 import { Opacity } from "../lib/OpacityClass";
 import { Effect } from "../lib/EffectClass";
+import * as Tone from "tone";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -40,6 +41,10 @@ export const HandSketch = ({ handpose }: Props) => {
     Bodies = Matter.Bodies,
     Composite = Matter.Composite;
   const floors: Matter.Body[] = [];
+
+  const player = new Tone.Player(
+    "https://tonejs.github.io/audio/berklee/gong_1.mp3"
+  ).toDestination();
   for (let i = 0; i < 11; i++) {
     floors.push(
       Bodies.rectangle(
@@ -272,6 +277,10 @@ export const HandSketch = ({ handpose }: Props) => {
     for (const point of points) {
       point.update(balls, score);
       if (point.state == "hit") {
+        //play a middle 'C' for the duration of an 8th note
+        Tone.loaded().then(() => {
+          player.start();
+        });
         effectList.push(new Effect(point.position));
         point.state = "dying";
       }

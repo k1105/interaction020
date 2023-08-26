@@ -42,7 +42,7 @@ export default function App() {
         }
 
         if (lostCountRef.current > 100) {
-          sketchContainerRef.current!.style.filter = "blur(5px)";
+          sketchContainerRef.current!.style.filter = "blur(10px)";
         }
       }
     }
