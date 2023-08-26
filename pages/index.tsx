@@ -39,6 +39,9 @@ export default function App() {
 
         if (lostCountRef.current > 5) {
           predictionsRef.current = [];
+        }
+
+        if (lostCountRef.current > 100) {
           sketchContainerRef.current!.style.filter = "blur(5px)";
         }
       }
