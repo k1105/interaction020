@@ -13,6 +13,7 @@ import { Ball } from "../lib/BallClass";
 import { Event } from "../lib/EventClass";
 import { Point } from "../lib/PointClass";
 import { Opacity } from "../lib/OpacityClass";
+import { Effect } from "../lib/EffectClass";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -55,11 +56,13 @@ export const HandSketch = ({ handpose }: Props) => {
   for (let i = 0; i < 3; i++) {
     points.push(new Point({ x: window.innerWidth, y: window.innerHeight }, 30));
   }
-  let event = new Event("x0.5", 50);
+  let event = new Event("+1", 50);
   const balls: Ball[] = [];
   for (let i = 0; i < 1; i++) {
     balls.push(new Ball({ x: window.innerWidth / 2, y: -1000 }, 80));
   }
+
+  const effectList: Effect[] = [];
 
   const opacity = new Opacity();
 
@@ -211,10 +214,12 @@ export const HandSketch = ({ handpose }: Props) => {
     for (const ball of balls) {
       const circle = ball.body;
       if (circle.position.y > 2000) {
-        Matter.Body.setPosition(circle, { x: window.innerWidth / 2, y: -1000 });
-        score.current = 0;
-        opacity.pulse();
+        Composite.remove(engine.world, ball.body);
+        const target = balls.indexOf(ball);
+        balls.splice(target, 1);
       }
+
+      event.update(ball);
 
       if (event.getState() == "fired") {
         if (event.type == "x2") {
@@ -225,6 +230,10 @@ export const HandSketch = ({ handpose }: Props) => {
           Matter.Body.scale(circle, 0.5, 0.5);
           ball.setMultiply(0.5);
           ball.updateScale(0.5);
+        } else if (event.type == "+1") {
+          const newBall = new Ball({ x: window.innerWidth / 2, y: -1000 }, 80);
+          balls.push(newBall);
+          Composite.add(engine.world, newBall.body);
         }
         event.setNone();
       }
@@ -237,9 +246,15 @@ export const HandSketch = ({ handpose }: Props) => {
         }
         event.setNone();
       }
-
-      event.update(ball);
       bestScore.current = Math.max(score.current, bestScore.current);
+    }
+
+    if (balls.length == 0) {
+      const newBall = new Ball({ x: window.innerWidth / 2, y: -1000 }, 80);
+      balls.push(newBall);
+      Composite.add(engine.world, newBall.body);
+      score.current = 0;
+      opacity.pulse();
     }
 
     for (const point of points) {
@@ -267,8 +282,8 @@ export const HandSketch = ({ handpose }: Props) => {
 
   setInterval(function () {
     if (!event.getIsAlive() && event.getIsExpired()) {
-      const types = ["x2", "x0.5"];
-      const typeId = Math.floor(Math.random() * 2);
+      const types = ["x2", "x0.5", "+1"];
+      const typeId = Math.floor(Math.random() * 3);
       event = new Event(types[typeId], 50);
     }
   }, 30000);
