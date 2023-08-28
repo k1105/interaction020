@@ -35,6 +35,7 @@ export const HandSketch = ({ handpose }: Props) => {
 
   const distList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
   const debugLog = useRef<{ label: string; value: any }[]>([]);
+  const gainRef = useRef<number>(1);
 
   // module aliases
   let Engine = Matter.Engine,
@@ -130,16 +131,24 @@ export const HandSketch = ({ handpose }: Props) => {
     if (hands.left.length > 0) {
       for (let i = 0; i < 5; i++) {
         distList[6 - (i + 1)] = {
-          x: hands.left[4 * i + 4].x - hands.left[4 * i + 1].x,
-          y: hands.left[4 * i + 4].y - hands.left[4 * i + 1].y,
+          x:
+            (hands.left[4 * i + 4].x - hands.left[4 * i + 1].x) *
+            gainRef.current,
+          y:
+            (hands.left[4 * i + 4].y - hands.left[4 * i + 1].y) *
+            gainRef.current,
         };
       }
     }
     if (hands.right.length > 0) {
       for (let i = 0; i < 5; i++) {
         distList[i + 6] = {
-          x: hands.right[4 * i + 4].x - hands.right[4 * i + 1].x,
-          y: hands.right[4 * i + 4].y - hands.right[4 * i + 1].y,
+          x:
+            (hands.right[4 * i + 4].x - hands.right[4 * i + 1].x) *
+            gainRef.current,
+          y:
+            (hands.right[4 * i + 4].y - hands.right[4 * i + 1].y) *
+            gainRef.current,
         };
       }
     }
@@ -338,7 +347,7 @@ export const HandSketch = ({ handpose }: Props) => {
 
   return (
     <>
-      <Monitor handpose={handpose} debugLog={debugLog} />
+      <Monitor handpose={handpose} debugLog={debugLog} gain={gainRef} />
       {/* <Recorder handpose={handpose} /> */}
       <Sketch
         preload={preload}

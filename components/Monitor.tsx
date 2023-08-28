@@ -16,6 +16,7 @@ type Props = {
       value: any;
     }[]
   >;
+  gain: MutableRefObject<number>;
 };
 
 type Handpose = Keypoint[];
@@ -25,9 +26,11 @@ const Sketch = dynamic(import("react-p5"), {
   ssr: false,
 });
 
-export const Monitor = ({ handpose, debugLog }: Props) => {
+export const Monitor = ({ handpose, debugLog, gain }: Props) => {
   const logRef = useRef<HTMLDivElement>(null);
+  const gainValueRef = useRef<HTMLParagraphElement>(null);
   const [debugVisibility, setDebugVisibility] = useState<boolean>(false);
+  const sliderRef = useRef<HTMLInputElement>(null);
 
   const preload = (p5: p5Types) => {
     // 画像などのロードを行う
@@ -38,19 +41,21 @@ export const Monitor = ({ handpose, debugLog }: Props) => {
     p5.stroke(220);
     p5.fill(255);
     p5.strokeWeight(10);
+    sliderRef.current!.value = "8";
   };
 
   const draw = (p5: p5Types) => {
     p5.clear();
 
-    if (logRef.current !== null) {
-      //ログ情報の描画
-      logRef.current.innerHTML = "";
-      for (const log of debugLog.current) {
-        logRef.current.innerHTML +=
-          "<p>" + log.label + " : " + String(log.value) + "</p>";
-      }
+    //ログ情報の描画
+    logRef.current!.innerHTML = "";
+    for (const log of debugLog.current) {
+      logRef.current!.innerHTML +=
+        "<p>" + log.label + " : " + String(log.value) + "</p>";
     }
+
+    gain.current = Number(sliderRef.current!.value) / 10;
+    gainValueRef.current!.innerHTML = "gain: " + gain.current;
 
     const rawHands: {
       left: Handpose;
@@ -106,16 +111,6 @@ export const Monitor = ({ handpose, debugLog }: Props) => {
     <>
       <div style={{ position: "absolute", top: 0, left: 0, zIndex: 99 }}>
         {debugVisibility && (
-          <>
-            <Sketch
-              preload={preload}
-              setup={setup}
-              draw={draw}
-              windowResized={windowResized}
-            />
-          </>
-        )}
-        {debugVisibility && (
           <div
             style={{
               position: "absolute",
@@ -132,7 +127,34 @@ export const Monitor = ({ handpose, debugLog }: Props) => {
               audio={false}
               screenshotFormat="image/jpeg"
             />
+          </div>
+        )}
+        {debugVisibility && (
+          <div
+            style={{
+              position: "absolute",
+              right: 30,
+              top: 30,
+              zIndex: 1,
+            }}
+          >
+            <div>
+              <div style={{ width: 300, height: 225 }} />
+              <p ref={gainValueRef} />
+              <input type="range" min="1" max="30" ref={sliderRef} />
+            </div>
             <div ref={logRef} style={{ fontSize: "0.8rem" }} />
+          </div>
+        )}
+
+        {debugVisibility && (
+          <div style={{ zIndex: 10 }}>
+            <Sketch
+              preload={preload}
+              setup={setup}
+              draw={draw}
+              windowResized={windowResized}
+            />
           </div>
         )}
       </div>
