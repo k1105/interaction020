@@ -15,6 +15,7 @@ import { Point } from "../lib/PointClass";
 import { Opacity } from "../lib/OpacityClass";
 import { Effect } from "../lib/EffectClass";
 import * as Tone from "tone";
+import { ScoreMonitor } from "../components/ScoreMonitor";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -36,6 +37,7 @@ export const HandSketch = ({ handpose }: Props) => {
   const distList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
   const debugLog = useRef<{ label: string; value: any }[]>([]);
   const gainRef = useRef<number>(1);
+  let lato: p5Types.Font;
 
   // module aliases
   let Engine = Matter.Engine,
@@ -74,12 +76,16 @@ export const HandSketch = ({ handpose }: Props) => {
 
   const score = useRef<number>(0);
   const bestScore = useRef<number>(0);
+  const displayScore = useRef<number>(0);
+  const displayBestScore = useRef<number>(0);
 
   // create an engine
   let engine: Matter.Engine;
 
   const preload = (p5: p5Types) => {
-    // 画像などのロードを行う
+    lato = p5.loadFont(
+      "https://k1105.github.io/sound_effect/font/Lato/Lato-Bold.ttf"
+    );
   };
 
   const setup = (p5: p5Types, canvasParentRef: Element) => {
@@ -87,8 +93,10 @@ export const HandSketch = ({ handpose }: Props) => {
     p5.stroke(220);
     p5.fill(255);
     p5.strokeWeight(10);
+    p5.strokeCap(p5.SQUARE);
     engine = Engine.create();
     Composite.add(engine.world, [...balls.map((b) => b.body), ...floors]);
+    p5.textFont(lato);
   };
 
   const draw = (p5: p5Types) => {
@@ -328,9 +336,34 @@ export const HandSketch = ({ handpose }: Props) => {
     for (const event of events) event.show(p5);
     for (const point of points) point.show(p5);
 
-    p5.textSize(20);
-    p5.text("Score: " + String(score.current), 100, p5.height - 140);
-    p5.text("Best Score: " + String(bestScore.current), 100, p5.height - 100);
+    /*Score */
+
+    if (displayScore.current !== score.current) {
+      if (score.current > displayScore.current) {
+        displayScore.current = Math.min(
+          displayScore.current + 1,
+          score.current
+        );
+      } else {
+        displayScore.current = Math.max(
+          displayScore.current - 1,
+          score.current
+        );
+      }
+    }
+    displayBestScore.current = Math.max(
+      displayScore.current,
+      displayBestScore.current
+    );
+
+    p5.translate(0, p5.height - 200);
+    ScoreMonitor({
+      score: displayScore.current,
+      bestScore: displayBestScore.current,
+      p5,
+    });
+
+    /* Score */
   };
 
   const windowResized = (p5: p5Types) => {
