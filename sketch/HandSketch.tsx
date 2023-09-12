@@ -16,6 +16,7 @@ import { Opacity } from "../lib/OpacityClass";
 import { Effect } from "../lib/EffectClass";
 import * as Tone from "tone";
 import { ScoreMonitor } from "../components/ScoreMonitor";
+import { randomSort } from "../lib/calculator/randomSort";
 
 type Props = {
   handpose: MutableRefObject<Hand[]>;
@@ -38,6 +39,9 @@ export const HandSketch = ({ handpose }: Props) => {
   const debugLog = useRef<{ label: string; value: any }[]>([]);
   const gainRef = useRef<number>(1);
   let lato: p5Types.Font;
+
+  const randomList = useRef<number[]>([4, 3, 2, 1, 0]);
+  const fingerName = ["thumb", "index", "middle", "ring", " pinky"];
 
   // module aliases
   let Engine = Matter.Engine,
@@ -138,24 +142,26 @@ export const HandSketch = ({ handpose }: Props) => {
 
     if (hands.left.length > 0) {
       for (let i = 0; i < 5; i++) {
-        distList[6 - (i + 1)] = {
+        const j = randomList.current[i];
+        distList[i + 1] = {
           x:
-            (hands.left[4 * i + 4].x - hands.left[4 * i + 1].x) *
+            (hands.left[4 * j + 4].x - hands.left[4 * j + 1].x) *
             gainRef.current,
           y:
-            (hands.left[4 * i + 4].y - hands.left[4 * i + 1].y) *
+            (hands.left[4 * j + 4].y - hands.left[4 * j + 1].y) *
             gainRef.current,
         };
       }
     }
     if (hands.right.length > 0) {
       for (let i = 0; i < 5; i++) {
-        distList[i + 6] = {
+        const j = randomList.current[i];
+        distList[10 - i] = {
           x:
-            (hands.right[4 * i + 4].x - hands.right[4 * i + 1].x) *
+            (hands.right[4 * j + 4].x - hands.right[4 * j + 1].x) *
             gainRef.current,
           y:
-            (hands.right[4 * i + 4].y - hands.right[4 * i + 1].y) *
+            (hands.right[4 * j + 4].y - hands.right[4 * j + 1].y) *
             gainRef.current,
         };
       }
@@ -215,6 +221,16 @@ export const HandSketch = ({ handpose }: Props) => {
             (i * p5.width) / 11,
           (distList[i].y + distList[i + 1].y) / 2 + (p5.height / 3) * 2
         );
+        // p5.push();
+        // p5.noStroke();
+        // p5.fill(220);
+        // p5.translate(0, -p5.height / 3);
+        // if (i > 5) {
+        //   p5.text(fingerName[randomList[i]], 0, 0);
+        // } else {
+        //   p5.text(fingerName[randomList[9 - i]], 0, 0);
+        // }
+        // p5.pop();
         p5.rotate(angle);
         p5.rect(0, 0, dist, 10);
         p5.pop();
@@ -369,6 +385,12 @@ export const HandSketch = ({ handpose }: Props) => {
   const windowResized = (p5: p5Types) => {
     p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
   };
+
+  addEventListener("keydown", (event) => {
+    if (event.code == "KeyR") {
+      randomList.current = randomSort(randomList.current);
+    }
+  });
 
   setInterval(function () {
     if (events.length == 0) {
