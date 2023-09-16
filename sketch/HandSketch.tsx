@@ -53,6 +53,7 @@ export const HandSketch = ({ handpose }: Props) => {
     "https://k1105.github.io/sound_effect/audio/wood_attack.m4a"
   ).toDestination();
   for (let i = 0; i < 11; i++) {
+    // foors
     floors.push(
       Bodies.rectangle(
         (window.innerWidth / 11) * i + window.innerWidth / 11 / 2,
@@ -64,9 +65,23 @@ export const HandSketch = ({ handpose }: Props) => {
     );
   }
 
+  // const bucket: Matter.Body[] = [];
+
+  // bucket.push(Bodies.rectangle(300, 350, 10, 100, { isStatic: true }));
+  // bucket.push(Bodies.rectangle(450, 400, 300, 10, { isStatic: true }));
+  // bucket.push(Bodies.rectangle(600, 350, 10, 100, { isStatic: true }));
+
   const points: Point[] = [];
   for (let i = 0; i < 3; i++) {
-    points.push(new Point({ x: window.innerWidth, y: window.innerHeight }, 30));
+    points.push(
+      new Point({
+        position: {
+          x: window.innerWidth * (Math.random() * 0.8 + 0.1),
+          y: window.innerHeight * (Math.random() * 0.3 + 0.1),
+        },
+        size: 30,
+      })
+    );
   }
   const events = [new Event("+1", 50)];
   const balls: Ball[] = [];
@@ -99,7 +114,11 @@ export const HandSketch = ({ handpose }: Props) => {
     p5.strokeWeight(10);
     p5.strokeCap(p5.SQUARE);
     engine = Engine.create();
-    Composite.add(engine.world, [...balls.map((b) => b.body), ...floors]);
+    Composite.add(engine.world, [
+      ...balls.map((b) => b.body),
+      ...floors,
+      // ...bucket,
+    ]);
     p5.textFont(lato);
   };
 
@@ -251,7 +270,11 @@ export const HandSketch = ({ handpose }: Props) => {
 
     for (const ball of balls) {
       const circle = ball.body;
-      if (circle.position.y > 2000) {
+      if (
+        circle.position.y > p5.height + 200 ||
+        circle.position.x > p5.width + 200 ||
+        circle.position.x < -200
+      ) {
         Composite.remove(engine.world, ball.body);
         const target = balls.indexOf(ball);
         balls.splice(target, 1);
@@ -284,13 +307,16 @@ export const HandSketch = ({ handpose }: Props) => {
 
         if (event.isExpired()) {
           if (event.type == "x2" || event.type == "x0.5") {
-            const scale = 1 / ball.getMultiply();
-            Matter.Body.scale(circle, scale, scale);
-            ball.updateScale(scale);
-            ball.setMultiply(1);
+            for (const targetBall of balls) {
+              const scale = 1 / targetBall.getMultiply();
+              if (scale !== 1) {
+                Matter.Body.scale(targetBall.body, scale, scale);
+                targetBall.updateScale(scale);
+                targetBall.setMultiply(1);
+                break;
+              }
+            }
           }
-        }
-        if (event.state == "dead" && event.isExpired()) {
           const target = events.indexOf(event);
           events.splice(target, 1);
         }
@@ -306,6 +332,10 @@ export const HandSketch = ({ handpose }: Props) => {
       score.current = 0;
       opacity.pulse();
     }
+
+    // p5.rect(300, 300, 10, 100);
+    // p5.rect(300, 390, 300, 10);
+    // p5.rect(600, 300, 10, 100);
 
     for (const point of points) {
       point.update(balls, score);
@@ -336,7 +366,13 @@ export const HandSketch = ({ handpose }: Props) => {
       setTimeout(function () {
         while (points.length < 3) {
           points.push(
-            new Point({ x: window.innerWidth, y: window.innerHeight }, 30)
+            new Point({
+              position: {
+                x: window.innerWidth * (Math.random() * 0.8 + 0.1),
+                y: window.innerHeight * (Math.random() * 0.3 + 0.1),
+              },
+              size: 30,
+            })
           );
         }
       }, 1000);
@@ -394,8 +430,8 @@ export const HandSketch = ({ handpose }: Props) => {
 
   setInterval(function () {
     if (events.length == 0) {
-      const types = ["x2", "x0.5", "+1"];
-      const typeId = Math.floor(Math.random() * 3);
+      const types = ["x2", "+1"];
+      const typeId = Math.floor(Math.random() * 2);
       events.push(new Event(types[typeId], 50));
     }
   }, 30000);

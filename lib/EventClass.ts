@@ -14,7 +14,7 @@ export class Event extends Target {
   }
 
   isExpired() {
-    return this.expired;
+    return this.state == "dead" && this.expired;
   }
 
   update(ball: Ball) {

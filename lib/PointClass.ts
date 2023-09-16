@@ -4,16 +4,15 @@ import { MutableRefObject } from "react";
 import p5Types from "p5";
 import { Target } from "./TargetClass";
 
+type Props = {
+  position: Keypoint;
+  size: number;
+};
+
 export class Point extends Target {
   private t: number;
-  constructor(range: Keypoint, size: number) {
-    super(
-      {
-        x: (Math.random() * 0.8 + 0.1) * range.x,
-        y: (Math.random() * 0.3 + 0.1) * range.y,
-      },
-      size
-    );
+  constructor({ position, size }: Props) {
+    super(position, size);
 
     this.t = 0;
     this.state = "alive";
