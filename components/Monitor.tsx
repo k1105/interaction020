@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import p5Types from "p5";
-import { MutableRefObject, useRef, useState } from "react";
+import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { Hand } from "@tensorflow-models/hand-pose-detection";
 import { resizeHandpose } from "../lib/converter/resizeHandpose";
 import { Keypoint } from "@tensorflow-models/hand-pose-detection";
@@ -29,8 +29,34 @@ const Sketch = dynamic(import("react-p5"), {
 export const Monitor = ({ handpose, debugLog, gain }: Props) => {
   const logRef = useRef<HTMLDivElement>(null);
   const gainValueRef = useRef<HTMLParagraphElement>(null);
-  const [debugVisibility, setDebugVisibility] = useState<boolean>(false);
   const sliderRef = useRef<HTMLInputElement>(null);
+
+  const [visibility, setVisibility] = useState<boolean>(false);
+  const [helperVisibility, setHelperVisibility] = useState<boolean>(true);
+  const visibilityRef = useRef<boolean>(false);
+  const helperVisibilityRef = useRef<boolean>(true);
+  visibilityRef.current = visibility;
+  helperVisibilityRef.current = helperVisibility;
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (event.code == "KeyC") {
+        setVisibility(!visibilityRef.current);
+      } else if (event.code == "KeyV") {
+        const body = document.body;
+        if (body.style.cursor == "none") {
+          body.style.cursor = "default";
+        } else {
+          body.style.cursor = "none";
+        }
+      } else if (event.code == "KeyH") {
+        setHelperVisibility(!helperVisibilityRef.current);
+      }
+    };
+    addEventListener("keydown", handler);
+
+    return () => removeEventListener("keydown", handler);
+  }, []);
 
   const preload = (p5: p5Types) => {
     // 画像などのロードを行う
@@ -94,23 +120,31 @@ export const Monitor = ({ handpose, debugLog, gain }: Props) => {
     p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
   };
 
-  addEventListener("keydown", (event) => {
-    if (event.code == "KeyC") {
-      setDebugVisibility(!debugVisibility);
-    } else if (event.code == "KeyV") {
-      const body = document.body;
-      if (body.style.cursor == "none") {
-        body.style.cursor = "default";
-      } else {
-        body.style.cursor = "none";
-      }
-    }
-  });
-
   return (
     <>
-      <div style={{ position: "absolute", top: 0, left: 0, zIndex: 99 }}>
-        {debugVisibility && (
+      {helperVisibility && (
+        <p
+          style={{
+            position: "absolute",
+            bottom: 5,
+            left: 10,
+            fontSize: "0.8rem",
+          }}
+        >
+          [h] show / hide helper (this line) | [v] show / hide cursor | [c] show
+          / hide monitor
+        </p>
+      )}
+
+      {visibility && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            zIndex: 99,
+          }}
+        >
           <div
             style={{
               position: "absolute",
@@ -128,8 +162,6 @@ export const Monitor = ({ handpose, debugLog, gain }: Props) => {
               screenshotFormat="image/jpeg"
             />
           </div>
-        )}
-        {debugVisibility && (
           <div
             style={{
               position: "absolute",
@@ -145,9 +177,6 @@ export const Monitor = ({ handpose, debugLog, gain }: Props) => {
             </div>
             <div ref={logRef} style={{ fontSize: "0.8rem" }} />
           </div>
-        )}
-
-        {debugVisibility && (
           <div style={{ zIndex: 10 }}>
             <Sketch
               preload={preload}
@@ -156,8 +185,8 @@ export const Monitor = ({ handpose, debugLog, gain }: Props) => {
               windowResized={windowResized}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 };
