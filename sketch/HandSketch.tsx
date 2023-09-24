@@ -40,39 +40,39 @@ export const HandSketch = ({ handpose }: Props) => {
 
   const randomList = useRef<number[]>([4, 3, 2, 1, 0]);
   const fingerName = ["thumb", "index", "middle", "ring", " pinky"];
+  const floorWidth = window.innerWidth * 0.9;
+  const floorOffset = (window.innerWidth - floorWidth) / 2;
 
   const posList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
 
   // module aliases
   let Engine = Matter.Engine,
     Bodies = Matter.Bodies,
-    Composite = Matter.Composite;
+    Composite = Matter.Composite,
+    Composites = Matter.Composites;
   const floors: Matter.Body[] = [];
-  const nodes: Matter.Body[] = [];
+
+  const comp = Composite.create();
 
   const player = new Tone.Player(
     "https://k1105.github.io/sound_effect/audio/wood_attack.m4a"
   ).toDestination();
   for (let i = 0; i < 11; i++) {
     // foors
-    nodes.push(
-      Bodies.circle(
-        (window.innerWidth / 11) * i,
-        (window.innerHeight / 3) * 2,
-        5,
-        { isStatic: true }
-      )
-    );
     floors.push(
       Bodies.rectangle(
-        (window.innerWidth / 11) * i + window.innerWidth / 11 / 2,
+        (floorWidth / 11) * i + floorWidth / 11 / 2 + floorOffset,
         (window.innerHeight / 3) * 2,
-        window.innerWidth / 11,
-        10,
-        { isStatic: true }
+        floorWidth / 11,
+        1,
+        //@ts-ignore
+        { chamfer: 0, isStatic: true }
       )
     );
+    Composite.add(comp, floors[i]);
   }
+
+  const chain = Composites.chain(comp, 0, 0, 0, 0, {});
 
   // const bucket: Matter.Body[] = [];
 
@@ -126,7 +126,6 @@ export const HandSketch = ({ handpose }: Props) => {
     Composite.add(engine.world, [
       ...balls.map((b) => b.body),
       ...floors,
-      // ...nodes,
       // ...bucket,
     ]);
     p5.textFont(lato);
@@ -161,13 +160,6 @@ export const HandSketch = ({ handpose }: Props) => {
     p5.background(255, opacity.value);
 
     p5.noStroke();
-    //base circle
-    p5.circle(0, (p5.height / 3) * 2, 10);
-    for (let i = 0; i < 11; i++) {
-      p5.circle((i * p5.width) / 11, (p5.height / 3) * 2, 10);
-    }
-    p5.circle(p5.width, (p5.height / 3) * 2, 10);
-    //base circle
 
     if (hands.left.length > 0) {
       for (let i = 0; i < 5; i++) {
@@ -196,28 +188,27 @@ export const HandSketch = ({ handpose }: Props) => {
       }
     }
 
-    for (let i = 1; i < 12; i++) {
-      p5.push();
-      p5.fill(200);
-      p5.translate((i * p5.width) / 11, (p5.height / 3) * 2);
-      p5.circle(posList[i].x, posList[i].y, 10);
-      p5.stroke(200);
-      p5.noFill();
-      p5.strokeWeight(2);
-      p5.line(0, 0, posList[i].x, posList[i].y);
-      p5.pop();
-    }
-
     p5.push();
     p5.noFill();
     p5.stroke(200);
     p5.rectMode(p5.CENTER);
     for (let i = 0; i < 12; i++) {
+      p5.push();
+      p5.noStroke();
+      p5.fill(255);
+      p5.translate((i * floorWidth) / 11 + floorOffset, (p5.height / 3) * 2);
+      p5.circle(0, 0, 10);
+      p5.circle(posList[i].x, posList[i].y, 10);
+      p5.stroke(255);
+      p5.noFill();
+      p5.strokeWeight(2);
+      p5.line(0, 0, posList[i].x, posList[i].y);
+      p5.pop();
       if (i < 11) {
         // const currentWidth = floors[i].bounds.max.x - floors[i].bounds.min.x;
         // const pointWidth = 100;
         const dist = p5.dist(
-          posList[i + 1].x + p5.width / 11,
+          posList[i + 1].x + floorWidth / 11,
           posList[i + 1].y,
           posList[i].x,
           posList[i].y
@@ -229,44 +220,42 @@ export const HandSketch = ({ handpose }: Props) => {
           floors[i].bounds.min.x,
           floors[i].bounds.min.y
         );
-        Matter.Body.scale(floors[i], 120 / rectWidth, 1);
+        Matter.Body.scale(floors[i], 100 / rectWidth, 1);
         const angle = Math.atan2(
           posList[i + 1].y - posList[i].y,
-          posList[i + 1].x + p5.width / 11 - posList[i].x
+          posList[i + 1].x + floorWidth / 11 - posList[i].x
         );
         Matter.Body.setPosition(
           floors[i],
           {
             x:
-              (posList[i].x + posList[i + 1].x + p5.width / 11) / 2 +
-              (i * p5.width) / 11,
+              (posList[i].x + posList[i + 1].x + floorWidth / 11) / 2 +
+              (i * floorWidth) / 11 +
+              floorOffset,
             y: (posList[i].y + posList[i + 1].y) / 2 + (p5.height / 3) * 2,
           }, //@ts-ignore
           true
         );
-        Matter.Body.setPosition(nodes[i], {
-          x: posList[i].x + (i * p5.width) / 11,
-          y: posList[i].y + (p5.height / 3) * 2,
-        });
         Matter.Body.setAngle(
           floors[i],
           angle, //@ts-ignore
           true
         );
         p5.push();
-        p5.noFill();
-        p5.strokeWeight(1);
+        p5.fill(255);
+        p5.noStroke();
         p5.translate(
-          (posList[i].x + posList[i + 1].x + p5.width / 11) / 2 +
-            (i * p5.width) / 11,
+          (posList[i].x + posList[i + 1].x + floorWidth / 11) / 2 +
+            (i * floorWidth) / 11 +
+            floorOffset,
           (posList[i].y + posList[i + 1].y) / 2 + (p5.height / 3) * 2
         );
-        const w = p5.dist(
-          floors[i].bounds.max.x,
-          floors[i].bounds.max.y,
-          floors[i].bounds.min.x,
-          floors[i].bounds.min.y
-        );
+        // const w = p5.dist(
+        //   floors[i].bounds.max.x,
+        //   floors[i].bounds.max.y,
+        //   floors[i].bounds.min.x,
+        //   floors[i].bounds.min.y
+        // );
 
         // p5.push();
         // p5.noStroke();
@@ -417,30 +406,30 @@ export const HandSketch = ({ handpose }: Props) => {
 
     /*Score */
 
-    if (displayScore.current !== score.current) {
-      if (score.current > displayScore.current) {
-        displayScore.current = Math.min(
-          displayScore.current + 1,
-          score.current
-        );
-      } else {
-        displayScore.current = Math.max(
-          displayScore.current - 1,
-          score.current
-        );
-      }
-    }
-    displayBestScore.current = Math.max(
-      displayScore.current,
-      displayBestScore.current
-    );
+    // if (displayScore.current !== score.current) {
+    //   if (score.current > displayScore.current) {
+    //     displayScore.current = Math.min(
+    //       displayScore.current + 1,
+    //       score.current
+    //     );
+    //   } else {
+    //     displayScore.current = Math.max(
+    //       displayScore.current - 1,
+    //       score.current
+    //     );
+    //   }
+    // }
+    // displayBestScore.current = Math.max(
+    //   displayScore.current,
+    //   displayBestScore.current
+    // );
 
-    p5.translate(0, p5.height - 200);
-    ScoreMonitor({
-      score: displayScore.current,
-      bestScore: displayBestScore.current,
-      p5,
-    });
+    // p5.translate(0, p5.height - 200);
+    // ScoreMonitor({
+    //   score: displayScore.current,
+    //   bestScore: displayBestScore.current,
+    //   p5,
+    // });
 
     /* Score */
   };
