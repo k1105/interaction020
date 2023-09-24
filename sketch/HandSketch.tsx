@@ -6,7 +6,6 @@ import { getSmoothedHandpose } from "../lib/getSmoothedHandpose";
 import { updateHandposeHistory } from "../lib/updateHandposeHistory";
 import { Keypoint } from "@tensorflow-models/hand-pose-detection";
 import { convertHandToHandpose } from "../lib/converter/convertHandToHandpose";
-import { isFront } from "../lib/calculator/isFront";
 import { Monitor } from "../components/Monitor";
 import Matter from "matter-js";
 import { Ball } from "../lib/BallClass";
@@ -35,7 +34,6 @@ export const HandSketch = ({ handpose }: Props) => {
     right: Handpose[];
   } = { left: [], right: [] };
 
-  const distList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
   const debugLog = useRef<{ label: string; value: any }[]>([]);
   const gainRef = useRef<number>(1);
   let lato: p5Types.Font;
@@ -43,22 +41,33 @@ export const HandSketch = ({ handpose }: Props) => {
   const randomList = useRef<number[]>([4, 3, 2, 1, 0]);
   const fingerName = ["thumb", "index", "middle", "ring", " pinky"];
 
+  const posList: Keypoint[] = new Array(12).fill({ x: 0, y: 0 });
+
   // module aliases
   let Engine = Matter.Engine,
     Bodies = Matter.Bodies,
     Composite = Matter.Composite;
   const floors: Matter.Body[] = [];
+  const nodes: Matter.Body[] = [];
 
   const player = new Tone.Player(
     "https://k1105.github.io/sound_effect/audio/wood_attack.m4a"
   ).toDestination();
   for (let i = 0; i < 11; i++) {
     // foors
+    nodes.push(
+      Bodies.circle(
+        (window.innerWidth / 11) * i,
+        (window.innerHeight / 3) * 2,
+        5,
+        { isStatic: true }
+      )
+    );
     floors.push(
       Bodies.rectangle(
         (window.innerWidth / 11) * i + window.innerWidth / 11 / 2,
         (window.innerHeight / 3) * 2,
-        1,
+        window.innerWidth / 11,
         10,
         { isStatic: true }
       )
@@ -117,6 +126,7 @@ export const HandSketch = ({ handpose }: Props) => {
     Composite.add(engine.world, [
       ...balls.map((b) => b.body),
       ...floors,
+      // ...nodes,
       // ...bucket,
     ]);
     p5.textFont(lato);
@@ -138,13 +148,13 @@ export const HandSketch = ({ handpose }: Props) => {
     for (const hand of handpose.current) {
       debugLog.current.push({
         label: hand.handedness + " accuracy",
-        value: hand.score,
+        value: Math.floor(hand.score * 100) / 100,
       });
-      debugLog.current.push({
-        label: hand.handedness + " is front",
-        //@ts-ignore
-        value: isFront(hand.keypoints, hand.handedness.toLowerCase()),
-      });
+      // debugLog.current.push({
+      //   label: hand.handedness + " is front",
+      //   //@ts-ignore
+      //   value: isFront(hand.keypoints, hand.handedness.toLowerCase()),
+      // });
     }
 
     p5.clear();
@@ -162,7 +172,7 @@ export const HandSketch = ({ handpose }: Props) => {
     if (hands.left.length > 0) {
       for (let i = 0; i < 5; i++) {
         const j = randomList.current[i];
-        distList[i + 1] = {
+        posList[i + 1] = {
           x:
             (hands.left[4 * j + 4].x - hands.left[4 * j + 1].x) *
             gainRef.current,
@@ -175,7 +185,7 @@ export const HandSketch = ({ handpose }: Props) => {
     if (hands.right.length > 0) {
       for (let i = 0; i < 5; i++) {
         const j = randomList.current[i];
-        distList[10 - i] = {
+        posList[10 - i] = {
           x:
             (hands.right[4 * j + 4].x - hands.right[4 * j + 1].x) *
             gainRef.current,
@@ -190,11 +200,11 @@ export const HandSketch = ({ handpose }: Props) => {
       p5.push();
       p5.fill(200);
       p5.translate((i * p5.width) / 11, (p5.height / 3) * 2);
-      p5.circle(distList[i].x, distList[i].y, 10);
+      p5.circle(posList[i].x, posList[i].y, 10);
       p5.stroke(200);
       p5.noFill();
       p5.strokeWeight(2);
-      p5.line(0, 0, distList[i].x, distList[i].y);
+      p5.line(0, 0, posList[i].x, posList[i].y);
       p5.pop();
     }
 
@@ -204,29 +214,40 @@ export const HandSketch = ({ handpose }: Props) => {
     p5.rectMode(p5.CENTER);
     for (let i = 0; i < 12; i++) {
       if (i < 11) {
-        const currentWidth = floors[i].bounds.max.x - floors[i].bounds.min.x;
-        const pointWidth = 100;
-        Matter.Body.scale(floors[i], pointWidth / currentWidth, 1);
+        // const currentWidth = floors[i].bounds.max.x - floors[i].bounds.min.x;
+        // const pointWidth = 100;
         const dist = p5.dist(
-          distList[i + 1].x + p5.width / 11,
-          distList[i + 1].y,
-          distList[i].x,
-          distList[i].y
+          posList[i + 1].x + p5.width / 11,
+          posList[i + 1].y,
+          posList[i].x,
+          posList[i].y
         );
+
+        const rectWidth = p5.dist(
+          floors[i].bounds.max.x,
+          floors[i].bounds.max.y,
+          floors[i].bounds.min.x,
+          floors[i].bounds.min.y
+        );
+        Matter.Body.scale(floors[i], 120 / rectWidth, 1);
         const angle = Math.atan2(
-          distList[i + 1].y - distList[i].y,
-          distList[i + 1].x + p5.width / 11 - distList[i].x
+          posList[i + 1].y - posList[i].y,
+          posList[i + 1].x + p5.width / 11 - posList[i].x
         );
         Matter.Body.setPosition(
           floors[i],
           {
             x:
-              (distList[i].x + distList[i + 1].x + p5.width / 11) / 2 +
+              (posList[i].x + posList[i + 1].x + p5.width / 11) / 2 +
               (i * p5.width) / 11,
-            y: (distList[i].y + distList[i + 1].y) / 2 + (p5.height / 3) * 2,
+            y: (posList[i].y + posList[i + 1].y) / 2 + (p5.height / 3) * 2,
           }, //@ts-ignore
           true
         );
+        Matter.Body.setPosition(nodes[i], {
+          x: posList[i].x + (i * p5.width) / 11,
+          y: posList[i].y + (p5.height / 3) * 2,
+        });
         Matter.Body.setAngle(
           floors[i],
           angle, //@ts-ignore
@@ -236,10 +257,17 @@ export const HandSketch = ({ handpose }: Props) => {
         p5.noFill();
         p5.strokeWeight(1);
         p5.translate(
-          (distList[i].x + distList[i + 1].x + p5.width / 11) / 2 +
+          (posList[i].x + posList[i + 1].x + p5.width / 11) / 2 +
             (i * p5.width) / 11,
-          (distList[i].y + distList[i + 1].y) / 2 + (p5.height / 3) * 2
+          (posList[i].y + posList[i + 1].y) / 2 + (p5.height / 3) * 2
         );
+        const w = p5.dist(
+          floors[i].bounds.max.x,
+          floors[i].bounds.max.y,
+          floors[i].bounds.min.x,
+          floors[i].bounds.min.y
+        );
+
         // p5.push();
         // p5.noStroke();
         // p5.fill(220);
@@ -254,15 +282,13 @@ export const HandSketch = ({ handpose }: Props) => {
         p5.rect(0, 0, dist, 10);
         p5.pop();
         // p5.push();
-        // p5.noFill();
-        // p5.strokeWeight(1);
+        // p5.fill(255);
+        // p5.noStroke();
+        // // p5.strokeWeight(1);
+
         // p5.translate(floors[i].position.x, floors[i].position.y);
         // p5.rotate(floors[i].angle);
-        // const [w, h] = [
-        //   floors[i].bounds.max.x - floors[i].bounds.min.x,
-        //   floors[i].bounds.max.y - floors[i].bounds.min.y,
-        // ];
-        // p5.rect(0, 0, w, h);
+        // p5.rect(0, 0, w, 10);
         // p5.pop();
       }
     }
@@ -333,6 +359,8 @@ export const HandSketch = ({ handpose }: Props) => {
       opacity.pulse();
     }
 
+    Engine.update(engine);
+
     // p5.rect(300, 300, 10, 100);
     // p5.rect(300, 390, 300, 10);
     // p5.rect(600, 300, 10, 100);
@@ -378,7 +406,6 @@ export const HandSketch = ({ handpose }: Props) => {
       }, 1000);
     }
 
-    Engine.update(engine);
     opacity.update();
 
     /* draw circle */
@@ -430,8 +457,8 @@ export const HandSketch = ({ handpose }: Props) => {
 
   setInterval(function () {
     if (events.length == 0) {
-      const types = ["x2", "+1"];
-      const typeId = Math.floor(Math.random() * 2);
+      const types = ["x2", "+1", "x0.5"];
+      const typeId = Math.floor(Math.random() * 3);
       events.push(new Event(types[typeId], 50));
     }
   }, 30000);
