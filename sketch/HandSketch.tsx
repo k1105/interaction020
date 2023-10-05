@@ -62,9 +62,9 @@ export const HandSketch = ({ handpose }: Props) => {
     floors.push(
       Bodies.rectangle(
         (floorWidth / 11) * i + floorWidth / 11 / 2 + floorOffset,
-        (window.innerHeight / 3) * 2,
+        window.innerHeight - 50,
         floorWidth / 11,
-        1,
+        100,
         //@ts-ignore
         { chamfer: 0, isStatic: true }
       )
@@ -149,11 +149,6 @@ export const HandSketch = ({ handpose }: Props) => {
         label: hand.handedness + " accuracy",
         value: Math.floor(hand.score * 100) / 100,
       });
-      // debugLog.current.push({
-      //   label: hand.handedness + " is front",
-      //   //@ts-ignore
-      //   value: isFront(hand.keypoints, hand.handedness.toLowerCase()),
-      // });
     }
 
     p5.clear();
@@ -214,17 +209,17 @@ export const HandSketch = ({ handpose }: Props) => {
           posList[i].y
         );
 
-        const rectWidth = p5.dist(
-          floors[i].bounds.max.x,
-          floors[i].bounds.max.y,
-          floors[i].bounds.min.x,
-          floors[i].bounds.min.y
-        );
-        Matter.Body.scale(floors[i], 100 / rectWidth, 1);
         const angle = Math.atan2(
           posList[i + 1].y - posList[i].y,
           posList[i + 1].x + floorWidth / 11 - posList[i].x
         );
+
+        Matter.Body.setVertices(floors[i], [
+          { x: posList[i].x, y: posList[i].y },
+          { x: posList[i + 1].x + floorWidth / 11, y: posList[i + 1].y },
+          { x: posList[i + 1].x + floorWidth / 11, y: posList[i + 1].y + 10 },
+          { x: posList[i].x, y: posList[i].y + 10 },
+        ]);
         Matter.Body.setPosition(
           floors[i],
           {
@@ -236,11 +231,6 @@ export const HandSketch = ({ handpose }: Props) => {
           }, //@ts-ignore
           true
         );
-        Matter.Body.setAngle(
-          floors[i],
-          angle, //@ts-ignore
-          true
-        );
         p5.push();
         p5.fill(255);
         p5.noStroke();
@@ -250,12 +240,6 @@ export const HandSketch = ({ handpose }: Props) => {
             floorOffset,
           (posList[i].y + posList[i + 1].y) / 2 + (p5.height / 3) * 2
         );
-        // const w = p5.dist(
-        //   floors[i].bounds.max.x,
-        //   floors[i].bounds.max.y,
-        //   floors[i].bounds.min.x,
-        //   floors[i].bounds.min.y
-        // );
 
         // p5.push();
         // p5.noStroke();
@@ -270,15 +254,6 @@ export const HandSketch = ({ handpose }: Props) => {
         p5.rotate(angle);
         p5.rect(0, 0, dist, 10);
         p5.pop();
-        // p5.push();
-        // p5.fill(255);
-        // p5.noStroke();
-        // // p5.strokeWeight(1);
-
-        // p5.translate(floors[i].position.x, floors[i].position.y);
-        // p5.rotate(floors[i].angle);
-        // p5.rect(0, 0, w, 10);
-        // p5.pop();
       }
     }
     p5.pop();
@@ -354,6 +329,19 @@ export const HandSketch = ({ handpose }: Props) => {
     // p5.rect(300, 390, 300, 10);
     // p5.rect(600, 300, 10, 100);
 
+    // 長方形の描画
+    // for (let i = 0; i < floors.length; i++) {
+    //   p5.push();
+    //   p5.noFill();
+    //   p5.stroke(255, 0, 0);
+    //   p5.strokeWeight(1);
+    //   p5.beginShape();
+    //   for (let j = 0; j < 4; j++)
+    //     p5.vertex(floors[i].vertices[j].x, floors[i].vertices[j].y);
+    //   p5.endShape(p5.CLOSE);
+    //   p5.pop();
+    // }
+
     for (const point of points) {
       point.update(balls, score);
       if (point.state == "hit") {
@@ -406,30 +394,30 @@ export const HandSketch = ({ handpose }: Props) => {
 
     /*Score */
 
-    // if (displayScore.current !== score.current) {
-    //   if (score.current > displayScore.current) {
-    //     displayScore.current = Math.min(
-    //       displayScore.current + 1,
-    //       score.current
-    //     );
-    //   } else {
-    //     displayScore.current = Math.max(
-    //       displayScore.current - 1,
-    //       score.current
-    //     );
-    //   }
-    // }
-    // displayBestScore.current = Math.max(
-    //   displayScore.current,
-    //   displayBestScore.current
-    // );
+    if (displayScore.current !== score.current) {
+      if (score.current > displayScore.current) {
+        displayScore.current = Math.min(
+          displayScore.current + 1,
+          score.current
+        );
+      } else {
+        displayScore.current = Math.max(
+          displayScore.current - 1,
+          score.current
+        );
+      }
+    }
+    displayBestScore.current = Math.max(
+      displayScore.current,
+      displayBestScore.current
+    );
 
-    // p5.translate(0, p5.height - 200);
-    // ScoreMonitor({
-    //   score: displayScore.current,
-    //   bestScore: displayBestScore.current,
-    //   p5,
-    // });
+    p5.translate(0, p5.height - 200);
+    ScoreMonitor({
+      score: displayScore.current,
+      bestScore: displayBestScore.current,
+      p5,
+    });
 
     /* Score */
   };
