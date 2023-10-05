@@ -48,11 +48,8 @@ export const HandSketch = ({ handpose }: Props) => {
   // module aliases
   let Engine = Matter.Engine,
     Bodies = Matter.Bodies,
-    Composite = Matter.Composite,
-    Composites = Matter.Composites;
+    Composite = Matter.Composite;
   const floors: Matter.Body[] = [];
-
-  const comp = Composite.create();
 
   const player = new Tone.Player(
     "https://k1105.github.io/sound_effect/audio/wood_attack.m4a"
@@ -69,10 +66,7 @@ export const HandSketch = ({ handpose }: Props) => {
         { chamfer: 0, isStatic: true }
       )
     );
-    Composite.add(comp, floors[i]);
   }
-
-  const chain = Composites.chain(comp, 0, 0, 0, 0, {});
 
   // const bucket: Matter.Body[] = [];
 
